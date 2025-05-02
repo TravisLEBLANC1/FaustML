@@ -1,5 +1,5 @@
 (lang dune 3.16)
-
+(using menhir 3.0)
 (name FaustML)
 
 (generate_opam_files true)

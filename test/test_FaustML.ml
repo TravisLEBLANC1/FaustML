@@ -11,7 +11,7 @@ let test1 =
   let (e:expr) = Match(Var("x"), [b1;b2])in 
   let f = {name = "f"; body = e ; param = ["x"]} in 
   let ftype = (["Int"], "Tree") in 
-  let (prog:prog) = {type_defs = types; fun_defs = [f]} in 
+  let (prog:prog) = {typedefs = types; fundefs = [f]} in 
   typ_prog prog (StringMap.singleton "f" ftype)
 
 let () = test1 

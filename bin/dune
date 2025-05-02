@@ -1,4 +1,11 @@
+(ocamllex
+ (modules lexer))
+(menhir
+ (modules parser)
+ (infer true))  
 (executable
  (public_name FaustML)
  (name main)
- (libraries faustlib))
+ (libraries faustlib)
+  (promote (until-clean))
+ (flags ()))
