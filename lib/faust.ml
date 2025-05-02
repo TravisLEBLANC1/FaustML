@@ -2,8 +2,8 @@ module StringMap = Map.Make(String)
 
 
 type prog = {
-  type_defs: type_def list; 
-  fun_defs: fun_def list;
+  typedefs: type_def list; 
+  fundefs: fun_def list;
 }
 and type_def = string * type_constr list   (*type t = C1 of t1..tn*)
 and type_constr = string * string list     (*C(x1,..,xn)*)

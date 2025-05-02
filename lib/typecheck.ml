@@ -34,7 +34,7 @@ let basetype_equal (t1:basetype) (t2:basetype) = String.equal t1 t2
 
 let check_constr fenv c = 
   if not @@ StringMap.mem c fenv then 
-    failwith @@ Printf.sprintf "type error: constr/fun %s not found " c
+    failwith @@ Printf.sprintf "type error: constr %s not found " c
 
 let check_type t1 t2 = 
   if not @@ basetype_equal t1 t2 then 
@@ -68,7 +68,7 @@ let rec tlist_match (cname:string) (tlist:basetype list) (tlist':basetype list) 
       tlist_match cname tlist tlist'
 
 let typ_prog (p:prog) (fenv:fenv) = 
-  let tenv = create_tenv p.type_defs in 
+  let tenv = create_tenv p.typedefs in 
   let fenv = StringMap.union (fun _ t1 _ -> Some(t1)) tenv fenv in 
   print_fenv fenv;
 
@@ -110,6 +110,6 @@ let typ_prog (p:prog) (fenv:fenv) =
     typ_expr f.body venv |> ignore;
   in 
 
-  List.iter (fun f -> type_fun f) p.fun_defs
+  List.iter (fun f -> type_fun f) p.fundefs
 
 
