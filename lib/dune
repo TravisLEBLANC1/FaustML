@@ -1,3 +1,4 @@
 (library
  (name faustlib)
- (modules faust tier typecheck))
+ (libraries ocamlgraph)
+ (modules faust tier syntax typecheck))

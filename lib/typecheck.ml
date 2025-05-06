@@ -1,5 +1,9 @@
 open Faust 
 
+(*****
+check for typing with the function typ_prog 
+******)
+
 type basetype = string                     (* t *)
 type funtype  = basetype list *basetype    (*t1..tn -> t*)
                                             (*T is which types C come from, t1..tn are the types of the arguments*)

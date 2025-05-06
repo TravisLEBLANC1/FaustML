@@ -9,4 +9,5 @@ let g(t) = match t with
 
 let f(x) = match x with 
   | Z -> L
-  | S(y) -> g(C(y))
+  | S(y) -> f(y)
+

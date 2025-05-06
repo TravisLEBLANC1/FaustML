@@ -1,5 +1,8 @@
 module StringMap = Map.Make(String)
 
+(****
+contains the type of a faustml program
+*****)
 
 type prog = {
   typedefs: type_def list; 
@@ -21,3 +24,26 @@ and expr =
   | Match of expr * (type_branch list)   (*match e with c1->e1..cn->en*)
 
 type value = VCstr of string * value list
+
+
+let branch_expr (b:type_branch) = let ((_,_),e)=b in e
+let branch_vars (b:type_branch) = let ((_,x),_)=b in x
+
+(*return true if e is the variable x*)
+let is_var x (e:expr) = match e with
+  | Var(z) -> String.equal x z 
+  | _ -> false
+
+let rec concat slst del = match slst with 
+  | [] -> ""
+  | s::slst -> s^del^(concat slst del) 
+
+let rec expr2string = function 
+  | Var(x)-> x
+  | Let(x,e1,e2)-> "let "^x^" = "^ expr2string e1^" in "^expr2string e2
+  | Cstr(c,elst) -> c^"("^(concat (List.map (expr2string) elst) ",")^")"
+  | App(f,elst) -> f^"("^(concat (List.map (expr2string) elst) ",")^")"
+  | Match(e, blst) -> "match "^ expr2string e ^ " with \n" ^ (concat (List.map (branch2string) blst) "\n")
+and branch2string (b:type_branch) = 
+  let ((c,xlst),e) = b in 
+  "| "^c^"("^(concat xlst ",")^") -> "^ expr2string e

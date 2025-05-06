@@ -34,6 +34,7 @@ let () =
     let ftype = (["int"], "tree") in 
     let gtype = (["tree"], "tree") in
     Typecheck.typ_prog prog (StringMap.add "g" gtype @@ StringMap.singleton "f" ftype);
+    Syntax.check_syntax prog;
     exit 0
   with
   | Parser.Error ->
