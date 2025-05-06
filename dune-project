@@ -5,11 +5,11 @@
 (generate_opam_files true)
 
 (source
- (github username/reponame))
+ (github TravisLEBLANC1/FaustML))
 
-(authors "Author Name")
+(authors "Travis LEBLANC")
 
-(maintainers "Maintainer Name")
+(maintainers "Travis LEBLANC")
 
 (license LICENSE)
 
