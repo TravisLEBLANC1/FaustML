@@ -1,5 +1,10 @@
 open Faust 
 
+(*****
+check for tiering with the function tier_prog
+******)
+
+
 type tier = int                                   (*t*)
 type funtier = FunT of tier list * tier          (*t1..tn->k*)
 type tiermap = funtier StringMap.t              (* f =>  (t1..tn->k)*)
