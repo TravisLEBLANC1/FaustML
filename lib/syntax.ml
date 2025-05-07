@@ -4,16 +4,14 @@ open Faust
 check for syntactic restriction with the function check_syntax
 we can also create the depedency graph with dep_graph
 ******)
-
-
 module G = Graph.Imperative.Digraph.Concrete(struct
   type t = string
   let compare = compare
   let hash = Hashtbl.hash
   let equal = (=)
 end)
-
-(* Use a printer to output the graph in DOT format *)
+module DFS = Graph.Traverse.Dfs(G)
+module H = Hashtbl.Make(G.V)
 module Dot = Graph.Graphviz.Dot(struct
   include G
   let edge_attributes _ = []
@@ -45,6 +43,39 @@ let dep_graph (prog:prog) :G.t =
   List.iter dep_fun prog.fundefs;
   dep
 
+(***************)
+(*this is a part of code of the Graph.Traverse.DFS library,
+i want the "has_cycle" function but only starting from a particular point*)
+let is_in_cycle g start =
+  let h = H.create 97 in
+  let stack = Stack.create () in
+  let loop () =
+    while not (Stack.is_empty stack) do
+      let v = Stack.top stack in
+      if H.mem h v then begin
+        (* we are now done with node v *)
+        (* assert (H.find h v = true); *)
+        H.replace h v false;
+        ignore (Stack.pop stack)
+      end else begin
+        (* we start DFS from node v *)
+        H.add h v true;
+        G.iter_succ
+          (fun w ->
+              try if H.find h w then raise Exit
+              with Not_found -> Stack.push w stack)
+          g v;
+      end
+    done
+  in
+  Stack.push start stack;
+  try
+    loop ();
+    false
+  with Exit ->
+    true 
+(*******************)
+let is_rec f (g:G.t) = is_in_cycle g f 
 let print_graph (g:G.t) = 
   let oc = open_out "graph.dot" in
   Dot.output_graph oc g;
@@ -56,7 +87,8 @@ let is_rec_call (dep: G.t) f g = G.mem_edge dep g f
 
 
 (* return true if e is in the list of variables vars*)
-let is_in_var vars e = match e with 
+let is_in_var vars e = 
+  match e with 
   | Var(z) -> List.mem z vars 
   | _ -> false
 

@@ -1,13 +1,15 @@
 type tree = L | B of tree * tree | C of int
 type int = Z | S of int 
 
-let g(t) = match t with
+let g(t,w) = match t with
+  | B(t1,t2) -> g(t1,w)
   | L -> L 
-  | B(t1,t2) -> g(t1)
-  | C(y) -> f(y)
+  | C(y) -> f(y,w)
 
 
-let f(x) = match x with 
-  | Z -> L
-  | S(y) -> f(y)
+let f(x,w) = match x with 
+  | Z -> h(w)
+  | S(y) -> f(y,w)
+
+let h(x) = C(Z)
 

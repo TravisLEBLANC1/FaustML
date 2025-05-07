@@ -80,17 +80,19 @@ let typ_prog (p:prog) (fenv:fenv) =
     | Var(x) -> 
       if not @@ StringMap.mem x venv then 
         failwith @@ "type error: variable"^ x ^"not typed " ;
-
       StringMap.find x venv 
+
     | Let(x,e1,e2) -> 
       let t1 = typ_expr e1 venv in 
       typ_expr e2 (StringMap.add x t1 venv)
+
     | Cstr(c, elist) | App(c,elist) -> 
       check_constr fenv c;
       let (tlist, t) = StringMap.find c fenv in
       let tlist' = typ_exprlist elist venv in 
       tlist_match c tlist tlist'; 
       t
+      
     | Match(e, blist) -> 
       let t1 = typ_expr e venv in 
       let (_,t2) = typ_branch (List.hd blist) venv in 
