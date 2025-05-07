@@ -12,7 +12,7 @@ type prog = {
 }
 and type_def = string * type_constr list   (*type t = C1 of t1..tn*)
 and type_constr = string * string list     (*C(x1,..,xn)*)
-and type_branch = type_constr * expr 
+and type_branch = Branch of type_constr * expr 
 and fun_def = {                            (*f(x1,..,xn) = e*)
   name: string;
   body: expr;
@@ -28,8 +28,8 @@ and expr =
 type value = VCstr of string * value list
 
 
-let branch_expr (b:type_branch) = let ((_,_),e)=b in e
-let branch_vars (b:type_branch) = let ((_,x),_)=b in x
+let branch_expr (b:type_branch) = let Branch((_,_),e)=b in e
+let branch_vars (b:type_branch) = let Branch((_,x),_)=b in x
 
 (*return true if e is the variable x*)
 let is_var x (e:expr) = match e with
@@ -47,5 +47,5 @@ let rec expr2string = function
   | App(f,elst) -> f^"("^(concat (List.map (expr2string) elst) ",")^")"
   | Match(e, blst) -> "match "^ expr2string e ^ " with \n" ^ (concat (List.map (branch2string) blst) "\n")
 and branch2string (b:type_branch) = 
-  let ((c,xlst),e) = b in 
+  let Branch((c,xlst),e) = b in 
   "| "^c^"("^(concat xlst ",")^") -> "^ expr2string e
