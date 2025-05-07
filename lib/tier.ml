@@ -30,14 +30,16 @@ let make_id_res fname = Printf.sprintf "%s_res" fname
 
 let merge_name s1 s2 = s1^"/"^s2
 
+let merge_classes u1opt u2opt = 
+  if Option.is_some u1opt && Option.is_some u2opt then 
+    let u1 = Option.get u1opt in 
+    let u2 = Option.get u2opt in 
+    UF.merge merge_name u1 u2 |> ignore
+
 let union_list ulist ulist' = 
-  List.iter2 (fun u v -> UF.merge merge_name u v |> ignore) ulist ulist'
+  List.iter2 (fun u v -> merge_classes (Some(u)) v) ulist ulist' (*TODO un peu random le Some...*)
 
 
-
-let new_elem = 
-  let cpt= ref 0 in 
-  fun () -> incr cpt; UF.make @@ Printf.sprintf "tmp_%d" !cpt
 
 (* fail if the program is not tierable *)
 let tier_prog (prog:prog):unit= 
@@ -59,50 +61,50 @@ let tier_prog (prog:prog):unit=
     add2venv f.param (List.tl @@ StringMap.find f.name funUFmap) StringMap.empty 
   in 
 
-  let rec equiv_expr (fname:string) (venv:venv) expr :ufelem= match expr with
-    | Var(x) -> 
-      let tmp = StringMap.find x venv in 
-      tmp
+  let rec equiv_expr (fname:string) (venv:venv) expr :ufelem option = match expr with
+    | Var(x) -> StringMap.find_opt x venv
 
     | Let(x,e1,e2) ->
       let u = equiv_expr fname venv e1 in 
-      let ux = (UF.make (make_id fname x)) in 
-      UF.merge merge_name ux u |> ignore;
+      let ux = Some(UF.make (make_id fname x)) in 
+      merge_classes ux u |> ignore;
       equiv_expr fname venv e2
 
     | Cstr(_,elst) -> 
       if List.is_empty elst then 
-        new_elem () 
+        None
       else
         let u = equiv_expr fname venv (List.hd elst) in 
-        List.iter (fun e -> let u' = equiv_expr fname venv e in ignore @@ UF.merge merge_name  u' u) (List.tl elst);
+        List.iter (fun e -> let u' = equiv_expr fname venv e in ignore @@ merge_classes  u' u) (List.tl elst);
         u
 
     | App(f,elist) -> 
       let ulist = StringMap.find f funUFmap in 
       let ulist' = equiv_exprlist fname venv elist in 
-      union_list (List.tl ulist) ulist'; (*tl ulist contain the params elem of f*)
-      
-      List.hd ulist (*hd ulist contain the return elem of f*)
+      union_list (List.tl ulist) ulist';   (*tl ulist contain the params elem of f*)
+      Some(List.hd ulist)                        (*hd ulist contain the return elem of f*)
 
     | Match(e,blist) -> 
       let u = equiv_expr fname venv e in
       let bu = equiv_branch fname venv u (List.hd blist) in 
       List.iter 
-        (fun b -> let bu' = equiv_branch fname venv u b in  ignore @@ UF.merge merge_name  bu' bu) 
+        (fun b -> let bu' = equiv_branch fname venv u b in  ignore @@ merge_classes bu' bu) 
         (List.tl blist);
       bu
 
-  and equiv_exprlist (fname:string) (venv:venv) (elist:expr list):(ufelem list) = 
+  and equiv_exprlist (fname:string) (venv:venv) (elist:expr list) = 
     List.fold_right (fun e acc -> equiv_expr fname venv e :: acc) elist [] 
 
-  and equiv_branch (fname:string) (venv:venv) (u:ufelem) (b:type_branch) :ufelem= 
+  and equiv_branch (fname:string) (venv:venv) u (b:type_branch)= 
     let Branch((_,xlist),e) = b in  (*branch of the form _(xlist) -> e*)
     (* create a new element for each x + merge it with u + and add it to venv*)
-    let majvenv venv x = 
-      let u' = (UF.make (make_id fname x)) in 
-      UF.merge merge_name  u' u |> ignore;
-      StringMap.add x u' venv 
+    let majvenv (venv:venv) x = 
+      let u' = Some(UF.make (make_id fname x)) in 
+      merge_classes  u' u ;
+      if Option.is_some u' then 
+        StringMap.add x (Option.get u') venv 
+      else
+        venv
     in
     let newvenv = List.fold_left majvenv venv xlist in 
     equiv_expr fname newvenv e
@@ -112,7 +114,7 @@ let tier_prog (prog:prog):unit=
     let venv = create_venv f in 
     let u = equiv_expr f.name venv f.body in 
     let ures = List.hd @@ StringMap.find f.name funUFmap in 
-    UF.merge merge_name u ures |> ignore 
+    merge_classes u (Some(ures))
   in 
   (* first we create the equivalence classes*)
   List.iter (fun f -> equiv_fun f ) prog.fundefs;
@@ -127,8 +129,10 @@ let tier_prog (prog:prog):unit=
       Syntax.G.add_edge constraints (UF.get @@ List.hd elems) (UF.get @@ List.hd @@ List.tl elems);
   in
   List.iter add_constraint prog.fundefs ;
-  Syntax.print_graph constraints;
+  Syntax.print_graph constraints "constraints";
   
   (*then we check if there is a cycle in the constraint graph*)
   if Syntax.DFS.has_cycle constraints then
-    failwith "tier error: the constraint graph has a loop"
+    failwith "tier error: the constraint graph has a loop";
+
+  Printf.printf "tiering done\n";

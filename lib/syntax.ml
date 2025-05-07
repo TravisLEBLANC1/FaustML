@@ -76,10 +76,10 @@ let is_in_cycle g start =
     true 
 (*******************)
 let is_rec f (g:G.t) = is_in_cycle g f 
-let print_graph (g:G.t) = 
-  let oc = open_out "graph.dot" in
+let print_graph (g:G.t) (name:string)= 
+  let oc = open_out ("graphs/"^name^".dot") in
   Dot.output_graph oc g;
-  Printf.printf "dep graph in graph.dot\n";
+  Printf.printf "graph put in %s.dot\n" name;
   close_out oc
 
 (* return true if g depends on f*)
@@ -95,7 +95,7 @@ let is_in_var vars e =
 
 let check_syntax (prog:prog) =
   let dep = dep_graph prog in 
-  print_graph dep;
+  print_graph dep "depedency";
 
   (*return true if elist == vars element by element*)
   let rec match_vars vars elist = match vars,elist with 
@@ -127,8 +127,9 @@ let check_syntax (prog:prog) =
   in  
   let check_fun (f:fun_def) = check_expr f.name f.param [] f.body in 
 
-  List.iter check_fun prog.fundefs
+  List.iter check_fun prog.fundefs;
 
+  Printf.printf "syntaxcheck done\n";
 
 
         
