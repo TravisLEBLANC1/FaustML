@@ -97,7 +97,7 @@ let tier_prog (prog:prog):unit=
     List.fold_right (fun e acc -> equiv_expr fname venv e :: acc) elist [] 
 
   and equiv_branch (fname:string) (venv:venv) (u:ufelem) (b:type_branch) :ufelem= 
-    let ((_,xlist),e) = b in  (*branch of the form _(xlist) -> e*)
+    let Branch((_,xlist),e) = b in  (*branch of the form _(xlist) -> e*)
     (* create a new element for each x + merge it with u + and add it to venv*)
     let majvenv venv x = 
       let u' = (UF.make (make_id fname x)) in 

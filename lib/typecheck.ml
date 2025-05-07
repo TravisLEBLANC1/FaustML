@@ -5,14 +5,14 @@ check for typing with the function typ_prog
 ******)
 
 type basetype = string                     (* t *)
-type funtype  = basetype list *basetype    (*t1..tn -> t*)
+type funtype  = Fun of basetype list *basetype    (*t1..tn -> t*)
                                             (*T is which types C come from, t1..tn are the types of the arguments*)
 type venv = basetype StringMap.t           (* var => typ*)
 type fenv = funtype StringMap.t            (* f ==> (t1..tn->t)*)
 
 let print_fenv (fenv:fenv) :unit= 
   let print_mapping c m = 
-    let (tlist,t) = m in 
+    let Fun(tlist,t) = m in 
     Printf.printf "%s:" c ;
     List.iter (fun t -> Printf.printf "%s " t) tlist ;
     Printf.printf "-> %s\n" t;
@@ -25,7 +25,7 @@ let create_tenv typel : fenv =
     let (tname,tlist) = t in  
     let add_to_env_constr (t:type_constr) tenv = 
       let (cname,subtypes) = t in  
-      StringMap.add cname (subtypes,tname) tenv 
+      StringMap.add cname (Fun(subtypes,tname)) tenv 
     in
     List.fold_right add_to_env_constr tlist tenv
   in
@@ -55,7 +55,7 @@ let add2venv xlist tlist venv =
   List.fold_left2 (fun acc x t -> StringMap.add x t acc ) venv xlist tlist
 
 
-let create_venv f ft = add2venv f.param (fst ft) StringMap.empty
+let create_venv f ft = let Fun(xlist, _) = ft in add2venv f.param xlist StringMap.empty
   
   
 
@@ -88,7 +88,7 @@ let typ_prog (p:prog) (fenv:fenv) =
 
     | Cstr(c, elist) | App(c,elist) -> 
       check_constr fenv c;
-      let (tlist, t) = StringMap.find c fenv in
+      let Fun(tlist, t) = StringMap.find c fenv in
       let tlist' = typ_exprlist elist venv in 
       tlist_match c tlist tlist'; 
       t
@@ -102,9 +102,9 @@ let typ_prog (p:prog) (fenv:fenv) =
   and typ_exprlist (exprl: expr list) (venv:venv) :(basetype list) =
     List.fold_left (fun acc e -> typ_expr e venv :: acc) [] (List.rev exprl)
   and typ_branch (b:type_branch) (venv:venv):(basetype*basetype)=
-    let ((c,xlist),e) = b in      (*branch of the form c(xlist) -> e*)
+    let Branch((c,xlist),e) = b in      (*branch of the form c(xlist) -> e*)
     check_constr fenv c;
-    let (tlist, t) = StringMap.find c fenv in (*type c:tlist -> t*)
+    let Fun(tlist, t) = StringMap.find c fenv in (*type c:tlist -> t*)
     let te = typ_expr e (add2venv xlist tlist venv) in   (*te=type of e*)
     (t, te)         (* type b:t->te*)
   in

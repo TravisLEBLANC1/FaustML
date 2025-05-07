@@ -49,8 +49,8 @@ expression:
 ;
 
 branches:
-| BAR p=pattern ARROW e=expression { (p, e) :: [] }
-| BAR p=pattern ARROW e=expression branches=branches { (p, e) :: branches }
+| BAR p=pattern ARROW e=expression { Branch(p, e) :: [] }
+| BAR p=pattern ARROW e=expression branches=branches { Branch(p, e) :: branches }
 ;
 
 pattern:

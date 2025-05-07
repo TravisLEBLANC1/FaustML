@@ -5,19 +5,21 @@ check for typing with the function typ_inf_prog
 ******)
 
 type gtype = Alpha of string | Base of basetype
-type gfuntype = gtype list * gtype
+type gfuntype = GFun of gtype list*gtype
 type gfenv = gfuntype StringMap.t
 type gvenv = gtype StringMap.t           (* var => gtyp*)
 
 let fenv2gfenv (fenv:fenv):gfenv = 
   let basetype2gtype b = Base(b) in 
   let funtype2gfuntype f = 
-    let (pl,r) = f in 
-    (List.map basetype2gtype pl, basetype2gtype r) in 
+    let Fun(pl,r) = f in 
+    GFun(List.map basetype2gtype pl, basetype2gtype r) in 
   StringMap.map funtype2gfuntype fenv 
 
+let add2venv xlist tlist venv = 
+  List.fold_left2 (fun acc x t -> StringMap.add x t acc ) venv xlist tlist
 
-
+let create_venv f ft = let GFun(xlist, _) = ft in add2venv f.param xlist StringMap.empty
 
 let type_inf_prog (prog:prog) = 
   let tenv = fenv2gfenv @@ create_tenv prog.typedefs in 
@@ -28,7 +30,7 @@ let type_inf_prog (prog:prog) =
 
   (* create new alpha types for each functions *)
   let create_fenv (funs:fun_def list) =
-    let new_funtype f = (List.map (fun _ -> Alpha(new_var())) f.param, Alpha(new_var())) in 
+    let new_funtype f = GFun(List.map (fun _ -> Alpha(new_var())) f.param, Alpha(new_var())) in 
     List.fold_left (fun acc f -> StringMap.add f.name (new_funtype f) acc) StringMap.empty funs
   in
   
@@ -54,7 +56,7 @@ let type_inf_prog (prog:prog) =
   in
   let print_gfenv (gfenv:gfenv) :unit= 
     let print_mapping c m = 
-      let (gtlist,gt) = m in 
+      let GFun(gtlist,gt) = m in 
       Printf.printf "%s:" c ;
       List.iter (fun t -> Printf.printf "%s " @@ gtype2string t) gtlist ;
       Printf.printf "-> %s\n" @@ gtype2string gt;
@@ -89,32 +91,35 @@ let type_inf_prog (prog:prog) =
 
     | Cstr(c, elist) | App(c,elist) -> 
       check_constr fenv c;
-      let (tlist, t) = StringMap.find c fenv in
+      let GFun(tlist, t) = StringMap.find c fenv in
       let tlist' = infer_exprlist elist gvenv in 
       unify_list tlist tlist'; 
       t
+
     | Match(e, blist) -> 
       let te = infer_expr e gvenv in 
       let (_,tb) = infer_branch (List.hd blist) gvenv in 
       (* check if all branch have the same input and output type *)
       List.iter (fun b -> let (tb1,tb2) = infer_branch b gvenv in unify te tb1; unify tb tb2;) blist;
       tb
+
   and infer_exprlist (exprl: expr list) (gvenv:gvenv) :(gtype list) =
     List.fold_left (fun acc e -> infer_expr e gvenv :: acc) [] (List.rev exprl)
+
   and infer_branch b gvenv :(gtype*gtype) = 
-    let ((c,xlist),e) = b in      (*branch of the form c(xlist) -> e*)
+    let Branch((c,xlist),e) = b in      (*branch of the form c(xlist) -> e*)
     check_constr fenv c;
-    let (tlist, t) = StringMap.find c fenv in (*type c:tlist -> t*)
+    let GFun(tlist, t) = StringMap.find c fenv in (*type c:tlist -> t*)
     let te = infer_expr e (add2venv xlist tlist gvenv) in   (*te=type of e*)
     (t, te)         (* type b:t->te*)
   in 
 
   let infer_fun (f:fun_def) =
     check_constr fenv f.name;
-    let funt =  StringMap.find f.name fenv in 
+    let GFun(_,r) as funt =  StringMap.find f.name fenv in 
     let venv = create_venv f funt in 
     let t = infer_expr f.body venv in
-    unify t (snd funt);
+    unify t r;
   in 
 
   print_gfenv fenv;
