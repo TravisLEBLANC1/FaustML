@@ -55,7 +55,7 @@ let add2venv xlist tlist venv =
   List.fold_left2 (fun acc x t -> StringMap.add x t acc ) venv xlist tlist
 
 
-let create_venv (f:fun_def) (ft:funtype) = add2venv f.param (fst ft) StringMap.empty
+let create_venv f ft = add2venv f.param (fst ft) StringMap.empty
   
   
 

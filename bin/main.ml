@@ -32,12 +32,14 @@ let () =
     in
     close_in c;
     let ftype = (["tree"; "int"], "int") in 
-    let gtype = (["int"; "tree";"int"], "int") in
-    let htype = (["int"], "int") in 
-    let addtype = (["int";"int"], "int") in 
-    Typecheck.typ_prog prog (StringMap.add "add" addtype @@  StringMap.add "h" htype @@ StringMap.add "g" gtype @@ StringMap.singleton "f" ftype);
+    let gtype = (["tree"; "int"], "int") in
+    let htype = (["int";"int"], "int") in 
+    let ttype = (["int"],"int") in 
+    (*
+    Typecheck.typ_prog prog (StringMap.add "t" ttype @@ StringMap.add "h" htype @@ StringMap.add "g" gtype @@ StringMap.singleton "f" ftype);
     Syntax.check_syntax prog;
-    Tier.tier_prog prog;
+    Tier.tier_prog prog; *)
+    Typeinfer.type_inf_prog prog;
     exit 0
   with
   | Parser.Error ->
