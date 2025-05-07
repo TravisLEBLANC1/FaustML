@@ -31,10 +31,13 @@ let () =
     let prog = Parser.program Lexer.token lb
     in
     close_in c;
-    let ftype = (["int"], "tree") in 
-    let gtype = (["tree"], "tree") in
-    Typecheck.typ_prog prog (StringMap.add "g" gtype @@ StringMap.singleton "f" ftype);
+    let ftype = (["tree"; "int"], "int") in 
+    let gtype = (["int"; "tree";"int"], "int") in
+    let htype = (["int"], "int") in 
+    let addtype = (["int";"int"], "int") in 
+    Typecheck.typ_prog prog (StringMap.add "add" addtype @@  StringMap.add "h" htype @@ StringMap.add "g" gtype @@ StringMap.singleton "f" ftype);
     Syntax.check_syntax prog;
+    Tier.tier_prog prog;
     exit 0
   with
   | Parser.Error ->
