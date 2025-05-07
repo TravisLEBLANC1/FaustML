@@ -122,9 +122,8 @@ let type_inf_prog (prog:prog) =
     unify t r;
   in 
 
-  print_gfenv fenv;
-  List.iter (fun f -> Printf.printf "looking at %s \n" f.name; infer_fun f; print_subst (); print_string "---\n") prog.fundefs;
+  List.iter (fun f -> (*Printf.printf "looking at %s \n" f.name;*) infer_fun f;(* print_subst (); print_string "---\n"*)) prog.fundefs;
   print_gfenv fenv;
 
-
+  Printf.printf "typecheck done\n";
   

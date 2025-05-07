@@ -116,6 +116,8 @@ let typ_prog (p:prog) (fenv:fenv) =
     typ_expr f.body venv |> ignore;
   in 
 
-  List.iter (fun f -> type_fun f) p.fundefs
+  List.iter (fun f -> type_fun f) p.fundefs;
+
+  Printf.printf "typecheck done\n";
 
 
