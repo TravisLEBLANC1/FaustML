@@ -7,8 +7,8 @@ check for typing with the function typ_prog
 type basetype = string                     (* t *)
 type funtype  = Fun of basetype list *basetype    (*t1..tn -> t*)
                                             (*T is which types C come from, t1..tn are the types of the arguments*)
-type venv = basetype StringMap.t           (* var => typ*)
-type fenv = funtype StringMap.t            (* f ==> (t1..tn->t)*)
+type venv = basetype SMap.t           (* var => typ*)
+type fenv = funtype SMap.t            (* f ==> (t1..tn->t)*)
 
 let print_fenv (fenv:fenv) :unit= 
   let print_mapping c m = 
@@ -17,7 +17,7 @@ let print_fenv (fenv:fenv) :unit=
     List.iter (fun t -> Printf.printf "%s " t) tlist ;
     Printf.printf "-> %s\n" t;
   in 
-  StringMap.iter print_mapping fenv 
+  SMap.iter print_mapping fenv 
 
 (* construct the type environement with the type of all constructors*)
 let create_tenv typel : fenv = 
@@ -25,11 +25,11 @@ let create_tenv typel : fenv =
     let (tname,tlist) = t in  
     let add_to_env_constr (t:type_constr) tenv = 
       let (cname,subtypes) = t in  
-      StringMap.add cname (Fun(subtypes,tname)) tenv 
+      SMap.add cname (Fun(subtypes,tname)) tenv 
     in
     List.fold_right add_to_env_constr tlist tenv
   in
-  List.fold_right add_to_env typel StringMap.empty 
+  List.fold_right add_to_env typel SMap.empty 
 
 (* check if c is in the fenv *)
 
@@ -37,7 +37,7 @@ let create_tenv typel : fenv =
 let basetype_equal (t1:basetype) (t2:basetype) = String.equal t1 t2
 
 let check_constr fenv c = 
-  if not @@ StringMap.mem c fenv then 
+  if not @@ SMap.mem c fenv then 
     failwith @@ Printf.sprintf "type error: constr %s not found " c
 
 let check_type t1 t2 = 
@@ -52,10 +52,10 @@ let check_branch_type t te t1 t2 =
 
 (* add all all pairs (x -> t) in venv*)
 let add2venv xlist tlist venv = 
-  List.fold_left2 (fun acc x t -> StringMap.add x t acc ) venv xlist tlist
+  List.fold_left2 (fun acc x t -> SMap.add x t acc ) venv xlist tlist
 
 
-let create_venv f ft = let Fun(xlist, _) = ft in add2venv f.param xlist StringMap.empty
+let create_venv f ft = let Fun(xlist, _) = ft in add2venv f.param xlist SMap.empty
   
   
 
@@ -73,22 +73,22 @@ let rec tlist_match (cname:string) (tlist:basetype list) (tlist':basetype list) 
 
 let typ_prog (p:prog) (fenv:fenv) = 
   let tenv = create_tenv p.typedefs in 
-  let fenv = StringMap.union (fun _ t1 _ -> Some(t1)) tenv fenv in 
+  let fenv = SMap.union (fun _ t1 _ -> Some(t1)) tenv fenv in 
   print_fenv fenv;
 
   let rec typ_expr (expr:expr) (venv:venv) :basetype = match expr with 
     | Var(x) -> 
-      if not @@ StringMap.mem x venv then 
+      if not @@ SMap.mem x venv then 
         failwith @@ "type error: variable"^ x ^"not typed " ;
-      StringMap.find x venv 
+      SMap.find x venv 
 
     | Let(x,e1,e2) -> 
       let t1 = typ_expr e1 venv in 
-      typ_expr e2 (StringMap.add x t1 venv)
+      typ_expr e2 (SMap.add x t1 venv)
 
     | Cstr(c, elist) | App(c,elist) -> 
       check_constr fenv c;
-      let Fun(tlist, t) = StringMap.find c fenv in
+      let Fun(tlist, t) = SMap.find c fenv in
       let tlist' = typ_exprlist elist venv in 
       tlist_match c tlist tlist'; 
       t
@@ -104,14 +104,14 @@ let typ_prog (p:prog) (fenv:fenv) =
   and typ_branch (b:type_branch) (venv:venv):(basetype*basetype)=
     let Branch((c,xlist),e) = b in      (*branch of the form c(xlist) -> e*)
     check_constr fenv c;
-    let Fun(tlist, t) = StringMap.find c fenv in (*type c:tlist -> t*)
+    let Fun(tlist, t) = SMap.find c fenv in (*type c:tlist -> t*)
     let te = typ_expr e (add2venv xlist tlist venv) in   (*te=type of e*)
     (t, te)         (* type b:t->te*)
   in
 
   let type_fun (f:fun_def) =
     check_constr fenv f.name;
-    let funt =  StringMap.find f.name fenv in 
+    let funt =  SMap.find f.name fenv in 
     let venv = create_venv f funt in 
     typ_expr f.body venv |> ignore;
   in 

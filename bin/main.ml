@@ -34,6 +34,8 @@ let () =
     Typeinfer.type_inf_prog prog;
     Tier.tier_prog prog; 
     Syntax.check_syntax prog;
+    let v = VCstr("S", [VCstr("S", [VCstr("S",[VCstr("S", [VCstr("Z",[])])])])]) in
+    Printf.printf "result=%s\n" @@ Faust.value2string @@ Interpret.eval_prog prog [v];
     exit 0
   with
   | Parser.Error ->
