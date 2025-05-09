@@ -1,4 +1,4 @@
-module StringMap = Map.Make(String)
+module SMap = Map.Make(String)
 
 
 
@@ -49,3 +49,10 @@ let rec expr2string = function
 and branch2string (b:type_branch) = 
   let Branch((c,xlst),e) = b in 
   "| "^c^"("^(concat xlst ",")^") -> "^ expr2string e
+
+let rec value2string (v:value) = 
+  let VCstr(c,vlist) = v in 
+  if List.is_empty vlist then 
+    c^"()"
+  else
+    c^"("^(value2string @@ List.hd vlist)^List.fold_right (fun v acc -> ","^(value2string v)^acc) (List.tl vlist) ")"

@@ -18,7 +18,7 @@
 }
 let digit = ['0'-'9']
 let alpha = ['a'-'z' 'A'-'Z']
-let ident = ['a'-'z' '_'] (alpha | '_' | digit)*
+let ident = ['a'-'z' '_'] (alpha | '_' | '\'' | digit)*
 let cstr = ['A'-'Z'] alpha*
   
 
