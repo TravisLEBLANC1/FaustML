@@ -79,7 +79,7 @@ let is_rec f (g:G.t) = is_in_cycle g f
 let print_graph (g:G.t) (name:string)= 
   let oc = open_out ("graphs/"^name^".dot") in
   Dot.output_graph oc g;
-  Printf.printf "graph put in %s.dot\n" name;
+  (* Printf.printf "graph put in %s.dot\n" name; *)
   close_out oc
 
 (* return true if g depends on f*)

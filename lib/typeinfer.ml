@@ -21,7 +21,7 @@ let add2venv xlist tlist venv =
 
 let create_venv f ft = let GFun(xlist, _) = ft in add2venv f.param xlist SMap.empty
 
-let type_inf_prog (prog:prog) = 
+let type_inf_prog (verbose:bool) (prog:prog) = 
   let tenv = fenv2gfenv @@ create_tenv prog.typedefs in 
   let new_var =
     let cpt = ref 0 in
@@ -58,7 +58,10 @@ let type_inf_prog (prog:prog) =
     let print_mapping c m = 
       let GFun(gtlist,gt) = m in 
       Printf.printf "%s:" c ;
-      List.iter (fun t -> Printf.printf "%s " @@ gtype2string t) gtlist ;
+      if not @@ List.is_empty gtlist then (
+        Printf.printf "%s" @@ gtype2string @@ List.hd gtlist;
+        List.iter (fun t -> Printf.printf "*%s" @@ gtype2string t) (List.tl gtlist);
+      );
       Printf.printf "-> %s\n" @@ gtype2string gt;
     in 
     SMap.iter print_mapping gfenv 
@@ -123,7 +126,8 @@ let type_inf_prog (prog:prog) =
   in 
 
   List.iter (fun f -> (*Printf.printf "looking at %s \n" f.name;*) infer_fun f;(* print_subst (); print_string "---\n"*)) prog.fundefs;
-  print_gfenv fenv;
+  if verbose then 
+    print_gfenv fenv;
 
   Printf.printf "typecheck done\n";
   

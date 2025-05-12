@@ -25,7 +25,7 @@ and expr =
   | App of string * expr list                   (* f(e1,..,en)*)
   | Match of expr * (type_branch list)   (*match e with c1->e1..cn->en*)
 
-type value = VCstr of string * value list
+type value = VCstr of string * value list (*the value C(v1,..,vn)*)
 
 
 let branch_expr (b:type_branch) = let Branch((_,_),e)=b in e
@@ -56,3 +56,14 @@ let rec value2string (v:value) =
     c^"()"
   else
     c^"("^(value2string @@ List.hd vlist)^List.fold_right (fun v acc -> ","^(value2string v)^acc) (List.tl vlist) ")"
+
+let find_fun fname fundefs = 
+  List.find (fun g -> String.equal g.name fname) fundefs 
+
+let add_association venv xlist vlist = 
+  let lx = List.length xlist in 
+  let lv = List.length vlist in 
+  if lx <> lv then 
+    invalid_arg @@ Printf.sprintf "%d!=%d cannot associate xlist with vlist" lx lv 
+  else
+  List.fold_left2 (fun acc x v -> SMap.add x v acc) venv xlist vlist

@@ -41,12 +41,18 @@ rule token = parse
       { LPAR }
   | ")"
       { RPAR }
+  | "["
+      { LBRACKET }
+  | "]"
+      { RBRACKET }
   | ","
       { COMMA }
   | "|"
       { BAR }
   | "*"
       { STAR }
+  | ";"
+      { SEMI }
   | _
       { failwith ("Unknown character : " ^ (lexeme lexbuf)) }
   | eof

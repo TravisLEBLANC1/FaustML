@@ -10,14 +10,15 @@
 %token TYPE OF STAR
 %token LET IN
 %token MATCH WITH ARROW
-%token LPAR RPAR
+%token LPAR RPAR LBRACKET RBRACKET
+%token SEMI 
 
 %nonassoc ARROW
 %nonassoc BAR
 
-%start program
+%start program valuelist
 %type <Faustlib.Faust.prog> program 
-
+%type <Faustlib.Faust.value list> valuelist
 %%
     
 program:
@@ -57,3 +58,11 @@ pattern:
 | c=CSTR { (c, []) }
 | c=CSTR LPAR pargs=separated_list(COMMA, IDENT) RPAR { (c, pargs) }
 ;
+
+value:
+| c=CSTR { VCstr(c, []) }
+| c=CSTR LPAR args=separated_list(COMMA, value) RPAR { VCstr(c, args) }
+
+valuelist :
+| v=value EOF {[v]}
+| LBRACKET values=separated_list(SEMI, value) RBRACKET EOF {values}
