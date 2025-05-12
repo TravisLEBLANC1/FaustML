@@ -42,7 +42,7 @@ let union_list ulist ulist' =
 
 
 (* fail if the program is not tierable *)
-let tier_prog (prog:prog):unit= 
+let tier_prog (verbose:bool) (prog:prog):unit= 
   let create_funUFmap funs = 
     let create_aux (m:funUFmap) (f:fun_def) =
       let tmpvarlst = List.fold_right (fun p acc-> (UF.make @@ make_id f.name p):: acc) f.param [] in 
@@ -118,7 +118,8 @@ let tier_prog (prog:prog):unit=
   in 
   (* first we create the equivalence classes*)
   List.iter (fun f -> equiv_fun f ) prog.fundefs;
-  print_classes prog.fundefs funUFmap;
+  if verbose then 
+    print_classes prog.fundefs funUFmap;
 
   (* we now create the conditions of tiering (for recursive calls) in a graph *)
   let dep = Syntax.dep_graph prog in 
@@ -129,7 +130,8 @@ let tier_prog (prog:prog):unit=
       Syntax.G.add_edge constraints (UF.get @@ List.hd elems) (UF.get @@ List.hd @@ List.tl elems);
   in
   List.iter add_constraint prog.fundefs ;
-  Syntax.print_graph constraints "constraints";
+  if verbose then 
+    Syntax.print_graph constraints "constraints";
   
   (*then we check if there is a cycle in the constraint graph*)
   if Syntax.DFS.has_cycle constraints then

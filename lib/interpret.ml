@@ -1,21 +1,10 @@
 open Faust 
 
 (*
-naive interpretor, do not use neither memoization or sharing
+naive interpretor call by value, do not use neither memoization nor sharing
 *)
 
 type venv = value SMap.t
-
-let find_fun fname fundefs = 
-  List.find (fun g -> String.equal g.name fname) fundefs 
-
-let add_association venv xlist vlist = 
-  let lx = List.length xlist in 
-  let lv = List.length vlist in 
-  if lx <> lv then 
-    invalid_arg (Printf.sprintf "%d!=%d cannot associate xlist with vlist" lx lv) 
-  else
-  List.fold_left2 (fun acc x v -> SMap.add x v acc) venv xlist vlist
 
 let is_branch v b = 
   let Branch((q,_), _) =b  in 
@@ -43,8 +32,7 @@ let rec eval (venv:venv) (fundefs:fun_def list) = function
     let v = eval venv fundefs e in 
     eval_blist venv fundefs v blist 
 
-and eval_elist venv fundefs elist = 
-  List.fold_left (fun acc e -> eval venv fundefs e :: acc) [] elist
+and eval_elist venv fundefs elist = List.map (eval venv fundefs) elist
 
 and eval_blist venv fundefs v blist = 
   let b = List.find (is_branch v) blist in 
