@@ -51,7 +51,7 @@ let eval_prog verbose prog vlist =
   (* merge the heap with a heapval (add if needed or else read)
   keep the heap maximally shared*)
   let merge heapval = 
-    let l = Array.find_index ((=) heapval) heap in 
+    let l = Array.find_index ((=) heapval) heap in   (*       TODO : how to find index????       *)
     if Option.is_some l then 
       Option.get l               (*read the heap*)
     else(

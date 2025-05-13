@@ -39,7 +39,7 @@ let dep_graph (prog:prog) :G.t =
     dep_expr f e;
   in 
   
-  let dep_fun (f:fun_def) = dep_expr f.name f.body in 
+  let dep_fun (f:fun_def) = G.add_vertex dep f.name; dep_expr f.name f.body in 
   List.iter dep_fun prog.fundefs;
   dep
 
@@ -75,7 +75,7 @@ let is_in_cycle g start =
   with Exit ->
     true 
 (*******************)
-let is_rec f (g:G.t) = is_in_cycle g f 
+let is_rec (g:G.t) f = is_in_cycle g f 
 let print_graph (g:G.t) (name:string)= 
   let oc = open_out ("graphs/"^name^".dot") in
   Dot.output_graph oc g;

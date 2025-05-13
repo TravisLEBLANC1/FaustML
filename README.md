@@ -16,8 +16,8 @@ the only depedency is *OCamlgraph* and *UnionFind*
 ```
 usage: ./faustml - [itsenap] prog.ml
   - condence version of the other options
-  -a enable all
-  -p enable polytime check (equiv to -tsi)
+  -a enable all (equiv to - tsien)
+  -p enable polytime check (equiv to - tsi)
   -t enable type check
   -s enable syntax check
   -i enable tier check
@@ -39,3 +39,8 @@ the input should have the form a list of values
 `[v1;..;vn]` with n the number of arguments of the first function of the program 
 if there is only 1 input, a simple value without bracket also works
 `[v]` or `v`
+
+## Graphs
+
+we can translate the constraints graph to a pdf using dot:
+`dot -Tpdf graphs/constraints.dot > graphs/constraints.pdf`
