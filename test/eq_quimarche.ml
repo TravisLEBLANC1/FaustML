@@ -1,23 +1,15 @@
 type nat = Z | S of nat
 type boolean = True | False 
 
-let eq(a,b) = _and(iszero(sub(b,a)),iszero2(sub2(idnat(a),idnat2(b))))
+let eq(a,b) = _and(leq(b,a),leq2(idnat(a),idnat2(b)))
 
-let eq(a,b) = _and(iszero(sub(b,a)),iszero(sub2(a,b)))
-let eq(a,b) = _and(iszero(sub(b,a)),iszero(sub(a,b)))
-
-
-
-
-let id(b) = match b with 
-  | True -> True 
-  | False -> False
 
 let _and(b1,b2) = match b1 with 
   | False -> False
-  | True -> id(b2)
+  | True -> b2
 
 let leq(a,b) = iszero(sub(b,a))
+let leq2(a,b) = iszero2(sub2(b,a))
 
 let iszero(x) = match x with
   | Z -> True 
