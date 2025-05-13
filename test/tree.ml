@@ -1,8 +1,9 @@
 type tree = L | N of tree*tree
-type abr = La | N of int*abr*abr
+type bst = Lbst of int | Nbst of int*abr*abr
 type nat = Z | S of nat
 type boolean = True | False 
 
+(****** classical trees *******)
 
 (*tier: i,j->j with i > j*)
 let add(x,y) = match x with 
@@ -37,10 +38,13 @@ let idnat2(n) = match n with
 let ifelse(b,e1,e2) = match b with 
   | True -> e1 
   | False -> e2 
+
+let iszero(x) = match x with 
   | Z -> True 
   | S(x2) -> False
 
-  let leq(a,b) = iszero(sub(b,a))
+let leq(a,b) = iszero(sub(b,a))
+
 (*i,i->i*)
 let max(x,y) = ifelse(leq(x,y),y,x)
 
@@ -52,3 +56,9 @@ let reverse(t) = match t with
   | L -> L 
   | N(t1,t2) -> N(reverse(t2), reverse(t1))
 
+
+(****** BST trees *******)
+
+let getval(t) = match t with 
+  | Lbst(v) -> v
+  | Nbst(v1,t1,t2) -> v1 

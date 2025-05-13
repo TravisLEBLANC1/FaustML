@@ -128,5 +128,4 @@ let mul2(x,y) = match x with
 let square(x) = mul(x,x)
 
 
-
 (* tier i,j->k with i,j>k*)
