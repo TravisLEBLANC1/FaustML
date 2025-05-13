@@ -47,6 +47,7 @@ expression:
 | MATCH e=expression WITH branches=branches { Match(e, branches) }
 | LET x=IDENT EQ e1=expression IN e2=expression
     { Let(x, e1, e2) }
+| LPAR e=expression RPAR { e }
 ;
 
 branches:

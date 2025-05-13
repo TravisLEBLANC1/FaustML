@@ -28,13 +28,14 @@ let add2venv xlist (tlist:ufelem list) (venv:venv) :venv =
 let make_id fname xname = Printf.sprintf "%s_%s" fname xname
 let make_id_res fname = Printf.sprintf "%s_res" fname
 
-let merge_name s1 s2 = s1^"/"^s2
+let merge_name s1 s2 = s1^"__"^s2
 
 let merge_classes u1opt u2opt = 
   if Option.is_some u1opt && Option.is_some u2opt then 
     let u1 = Option.get u1opt in 
     let u2 = Option.get u2opt in 
     UF.merge merge_name u1 u2 |> ignore
+
 
 let union_list ulist ulist' = 
   List.iter2 (fun u v -> merge_classes (Some(u)) v) ulist ulist' (*TODO un peu random le Some...*)
@@ -61,7 +62,8 @@ let tier_prog (verbose:bool) (prog:prog):unit=
     add2venv f.param (List.tl @@ SMap.find f.name funUFmap) SMap.empty 
   in 
 
-  let rec equiv_expr (fname:string) (venv:venv) expr :ufelem option = match expr with
+  let rec equiv_expr (fname:string) (venv:venv) expr :ufelem option = 
+    match expr with
     | Var(x) -> SMap.find_opt x venv
 
     | Let(x,e1,e2) ->
@@ -111,10 +113,14 @@ let tier_prog (verbose:bool) (prog:prog):unit=
   in
 
   let equiv_fun (f:fun_def) =
+    
+    
     let venv = create_venv f in 
     let u = equiv_expr f.name venv f.body in 
     let ures = List.hd @@ SMap.find f.name funUFmap in 
-    merge_classes u (Some(ures))
+    merge_classes u (Some(ures));
+    print_string @@"--------- " ^ f.name ^ " ------\n";
+    print_classes prog.fundefs funUFmap;
   in 
   (* first we create the equivalence classes*)
   List.iter (fun f -> equiv_fun f ) prog.fundefs;
@@ -125,7 +131,7 @@ let tier_prog (verbose:bool) (prog:prog):unit=
   let dep = Syntax.dep_graph prog in 
   let constraints = Syntax.G.create () in 
   let add_constraint f = 
-    if Syntax.is_rec f.name dep then
+    if Syntax.is_rec dep f.name then
       let elems = SMap.find f.name funUFmap in 
       Syntax.G.add_edge constraints (UF.get @@ List.hd elems) (UF.get @@ List.hd @@ List.tl elems);
   in
