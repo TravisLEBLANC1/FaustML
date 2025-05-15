@@ -5,6 +5,7 @@ type formulae =
     Bool of boolean
   | And of formulae*formulae
   | Or of formulae*formulae
+  | Not of formulae
 type tree = L | N of tree*tree
 
 
@@ -20,6 +21,9 @@ let istrue(f) = match f with
     let b1 = istrue(f1) in
     let b2 = istrue(f2) in 
     _or(b1,b2) 
+  | Not(f1) -> 
+    let b = istrue(f1) in 
+    _not(b)
 
 (*tier: i->k*)
 let id(b) = match b with 

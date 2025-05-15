@@ -1,4 +1,12 @@
 (library
  (name faustlib)
  (libraries ocamlgraph unionFind)
- (modules faust tier syntax typecheck typeinfer interpret interpretMS))
+ (modules 
+ faust 
+ tier 
+ syntax 
+ typecheck 
+ typeinfer 
+ interpret 
+ interpretMS
+ tierbetter))
