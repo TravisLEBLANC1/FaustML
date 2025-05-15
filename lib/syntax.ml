@@ -11,6 +11,7 @@ module G = Graph.Imperative.Digraph.Concrete(struct
   let equal = (=)
 end)
 module DFS = Graph.Traverse.Dfs(G)
+module Path = Graph.Path.Check(G)
 module H = Hashtbl.Make(G.V)
 module Dot = Graph.Graphviz.Dot(struct
   include G
@@ -43,10 +44,9 @@ let dep_graph (prog:prog) :G.t =
   List.iter dep_fun prog.fundefs;
   dep
 
-(***************)
-(*this is a part of code of the Graph.Traverse.DFS library,
-i want the "has_cycle" function but only starting from a particular point*)
-let is_in_cycle g start =
+(***********)
+(* this is a code modified from the Graph.Traverse.Dfs module*)
+let is_in_cycle (g:G.t) start =
   let h = H.create 97 in
   let stack = Stack.create () in
   let loop () =
@@ -62,20 +62,21 @@ let is_in_cycle g start =
         H.add h v true;
         G.iter_succ
           (fun w ->
-              try if H.find h w then raise Exit
+            (* modify line ↓ exit only if we found start*)
+              try if H.find h w && String.equal w start then raise Exit
               with Not_found -> Stack.push w stack)
           g v;
       end
     done
   in
-  Stack.push start stack;
   try
-    loop ();
+    Stack.push start stack; loop ();
     false
   with Exit ->
-    true 
-(*******************)
-let is_rec (g:G.t) f = is_in_cycle g f 
+    true
+(***********)
+let is_rec = is_in_cycle
+
 let print_graph (g:G.t) (name:string)= 
   let oc = open_out ("graphs/"^name^".dot") in
   Dot.output_graph oc g;
@@ -83,7 +84,7 @@ let print_graph (g:G.t) (name:string)=
   close_out oc
 
 (* return true if g depends on f*)
-let is_rec_call (dep: G.t) f g = G.mem_edge dep g f
+let is_rec_call (dep: G.t) f g = let pathchecker = Path.create dep in Path.check_path pathchecker g f 
 
 
 (* return true if e is in the list of variables vars*)
