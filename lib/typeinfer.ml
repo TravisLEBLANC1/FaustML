@@ -67,13 +67,13 @@ let type_inf_prog (verbose:bool) (prog:prog) =
     SMap.iter print_mapping gfenv 
   in 
 
-  let print_subst = fun () ->  
+  (* let print_subst = fun () ->  
     let print_subst s = 
       let (a,b) = s in Printf.printf "%s->%s\n" (a) (gtype2string b)
     in
     let slist = Hashtbl.to_seq subst in 
      Seq.iter print_subst slist; 
-  in
+  in *)
   let unify t1 t2 = match unfold t1, unfold t2 with
     | Base a, Base b when a=b -> ()
     | Alpha a, Alpha b when a=b -> ()                               

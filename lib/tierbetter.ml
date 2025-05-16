@@ -6,14 +6,18 @@ check for tiering with the function tier_prog
 
 module UF = UnionFind
 type ufelem = (string) UF.elem 
-type constra = LT of ufelem*ufelem 
+type uflist = ufelem list 
+type ufarray = ufelem array
+type constraInt = LT of int*int | EQ of int*int
+type constraUF = LTUF of ufelem*ufelem
 
-(*
-map fun -> (u11..u1k)..(un1..unq) where uij are the elements of the Union Find
-each to level list represent a parameter of f i.e
-(u11..u1k) is the set of ufelement linked to the first parameter of f
-*)
-type funUFmap = (ufelem list list) SMap.t 
+
+type funUFinfo = {
+  orig :ufarray;  (* initial classes of the parameters of f *)
+  constr :constraInt list; (* constraints that apply to orig and then to each duplication *)
+  dupl: ufarray list; (* duplication classes of the initial parameters of f (respect the same constraints) *)
+}
+type funUFmap = funUFinfo SMap.t 
 type venv = ufelem SMap.t
 
 let rec findlast l = match l with 
@@ -49,47 +53,74 @@ let merge_classes u1 u2 = UF.merge merge_name u1 u2 |> ignore
 let union_list ulist ulist' = 
   List.iter2 (fun u v -> merge_classes u v) ulist ulist'
 
-let create_funUFmap funs = 
+
+(*init a funUFmap with recursive constraints, and only the original UFelem for each fun*)
+let create_funUFmap funs dep = 
   let create_aux (m:funUFmap) (f:fun_def) =
-    let varlst = [UF.make @@ make_id_res f.name] :: List.map (fun p -> [UF.make @@ make_id f.name p]) f.param in  (* associate an empty list for each parameter and the result*) 
-    SMap.add f.name varlst m 
+    let origlist = (UF.make @@ make_id_res f.name ):: (List.map (fun p -> UF.make @@ make_id f.name p) f.param) in  
+    let orig = Array.of_list origlist in 
+    let constr = if Syntax.is_rec dep f.name then [LT(0,1)] else [] in 
+    let dupl = [] in 
+    SMap.add f.name {orig;constr;dupl} m 
   in
   List.fold_left create_aux SMap.empty funs
 
-
-(* fail if the program is not tierable *)
+(******
+ fail if the program is not tierable 
+*****)
 let tier_prog (verbose:bool) (prog:prog):unit= 
-  let funUFmap = ref @@ create_funUFmap prog.fundefs in (* map function to unionfind elems*)
-  let dep = Syntax.dep_graph prog in  (* graph of syntactic depedencies*)
-  let (constraints: constra list ref)= ref [] in  (* list of raw constaints *)
-  let constgraph = Syntax.G.create () in (* graph of constraints between union find elems*)
+  let dep = Syntax.dep_graph prog in                        (* graph of syntactic depedencies*)
+  let funUFmap = ref @@ create_funUFmap prog.fundefs dep in (* map function to unionfind elems*)
+  let (constraints: constraUF list ref)= ref [] in          (* list of raw constaints *)
+  let constgraph = Syntax.G.create () in                    (* graph of constraints between UFelems*)
 
   (* add the constraint that the return value is lower than the first argument *)
-  let add_constraint fname ulist = 
-    if Syntax.is_rec dep fname then begin 
-      constraints := (LT(List.hd ulist, List.hd @@ List.tl ulist))::!constraints;
+  let add_lt_constraint fname ulist = 
+    if Syntax.is_rec dep fname then begin  
+      constraints := (LTUF(List.hd ulist, List.hd @@ List.tl ulist))::!constraints;
     end
   in
 
-  (* return the ulist of the original argument (the last of each list)*)
-  let ulistOriginal fname = 
-    let ulistlist = SMap.find fname !funUFmap in 
-    List.map findlast ulistlist 
+  let add_eq_constraint fname constrlist = 
+    let infos = SMap.find fname !funUFmap in 
+    let newinfos = {orig=infos.orig; constr=constrlist@infos.constr; dupl=infos.dupl} in 
+    funUFmap := SMap.add fname newinfos !funUFmap;
   in
+
+  (* return the ulist of the original argument*)
+  let ulistOriginal fname = 
+    let infos = SMap.find fname !funUFmap in 
+    infos.orig 
+  in
+
+  (* look at the resulting classes and deduce equality constraints to put in the funUFmap*)
+  let deduce_constrInt fname = 
+    let orig = ulistOriginal fname in 
+    let n = Array.length orig in 
+    let constr = ref [] in 
+    for i= 0 to n do 
+      for j = i to n do 
+        if UF.eq orig.(i) orig.(j) then 
+          constr := EQ(i,j) :: !constr 
+      done
+    done;
+    !constr
+  in
+
   (* add all ufelement to the right list in funUFmap (the first one to the first one etc...)*)
   let add2funUFmap fname ulist = 
-    let ulistlist = SMap.find fname !funUFmap in 
-    let newulistlist = List.map2 (fun u ul -> u ::ul) ulist ulistlist in 
-    funUFmap := SMap.add fname newulistlist !funUFmap 
+    let infos = SMap.find fname !funUFmap in 
+    let newdupl = ulist ::infos.dupl in 
+    funUFmap := SMap.add fname {orig=infos.orig; constr=infos.constr; dupl=newdupl} !funUFmap 
   in
   (* create a new ulist for the function fname. 
   The first element is the one for the return value, the rest are the parameter*)
   let create_ulist fname = 
     let f = find_fun fname prog.fundefs in  
-    let tmpvarlst = List.map (fun p -> UF.make @@ make_id f.name p) f.param in 
-    let ulist = (UF.make @@ make_id_res f.name):: tmpvarlst in 
-    add2funUFmap fname ulist;
-    add_constraint fname ulist;
+    let tmpvarlst = (UF.make @@ make_id_res f.name):: List.map (fun p -> UF.make @@ make_id f.name p) f.param in 
+    let ufarray = Array.of_list @@ tmpvarlst in 
+    add2funUFmap fname ufarray;
+    add_lt_constraint fname ufarray;
     ulist
   in
   (* create a mapping of variable to one of the corresponding ufelement of f*)
@@ -151,13 +182,17 @@ let tier_prog (verbose:bool) (prog:prog):unit=
   let equiv_fun (f:fun_def) =
     let venv = create_venv f in 
     let u = equiv_expr f.name venv f.body in 
-    let ures = List.hd @@ ulistOriginal f.name in 
+    let ures = (ulistOriginal f.name).(0) in 
     merge_classes u ures;
-    print_string @@"--------- " ^ f.name ^ " ------\n";
-    print_classes_funs prog.fundefs !funUFmap;
+    let constr = deduce_constrInt f.name in 
+    add_eq_constraint f.name constr 
+    (* print_string @@"--------- " ^ f.name ^ " ------\n";
+    print_classes_funs prog.fundefs !funUFmap; *)
   in 
-  (* first we create the equivalence classes*)
-  List.iter (fun f -> equiv_fun f ) prog.fundefs;
+  
+  let toporder = List.map (fun fname -> find_fun fname prog.fundefs) @@ List.concat @@ Syntax.create_scc_order dep in 
+  List.iter (fun f -> equiv_fun f ) toporder;
+
   if verbose then 
     print_classes_funs prog.fundefs !funUFmap;
 
