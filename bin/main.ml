@@ -83,7 +83,7 @@ let () =
     if !type_flag then
       Typeinfer.type_inf_prog !verbose_flag prog;
     if !tier_flag then
-      Tier.tier_prog !verbose_flag prog; 
+      Tierwithdupl.tier_prog !verbose_flag prog; 
     if !synt_flag then
       Syntax.check_syntax prog;
     if !eval_flag || !naive_eval_flag then (

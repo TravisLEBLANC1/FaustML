@@ -1,90 +1,9 @@
 open Faust 
-
+open GraphF
 (*****
 check for syntactic restriction with the function check_syntax
 we can also create the depedency graph with dep_graph
 ******)
-module G = Graph.Imperative.Digraph.Concrete(struct
-  type t = string
-  let compare = compare
-  let hash = Hashtbl.hash
-  let equal = (=)
-end)
-module DFS = Graph.Traverse.Dfs(G)
-module Path = Graph.Path.Check(G)
-module H = Hashtbl.Make(G.V)
-module Dot = Graph.Graphviz.Dot(struct
-  include G
-  let edge_attributes _ = []
-  let default_edge_attributes _ = []
-  let get_subgraph _ = None
-  let vertex_attributes _ = []
-  let vertex_name v = v
-  let default_vertex_attributes _ = []
-  let graph_attributes _ = []
-end)
-
-let dep_graph (prog:prog) :G.t =  
-  let dep = G.create ~size:16 () in 
-  
-  (*add in graph all edged f->g where g appear in e*)
-  let rec dep_expr (f:string) (e:expr) = 
-    match e with
-    | Var(_) -> ()
-    | Let(_,e1,e2)-> dep_expr f e1; dep_expr f e2;
-    | Cstr(_,elst)-> List.iter (dep_expr f ) elst;
-    | App(g, elst) -> G.add_edge dep f g; List.iter (dep_expr f ) elst;
-    | Match(e,blst) -> dep_expr f e;  List.iter (dep_branch f) blst
-  and dep_branch (f:string) (b:type_branch) = 
-    let e = Faust.branch_expr b in 
-    dep_expr f e;
-  in 
-  
-  let dep_fun (f:fun_def) = G.add_vertex dep f.name; dep_expr f.name f.body in 
-  List.iter dep_fun prog.fundefs;
-  dep
-
-(***********)
-(* this is a code modified from the Graph.Traverse.Dfs module*)
-let is_in_cycle (g:G.t) start =
-  let h = H.create 97 in
-  let stack = Stack.create () in
-  let loop () =
-    while not (Stack.is_empty stack) do
-      let v = Stack.top stack in
-      if H.mem h v then begin
-        (* we are now done with node v *)
-        (* assert (H.find h v = true); *)
-        H.replace h v false;
-        ignore (Stack.pop stack)
-      end else begin
-        (* we start DFS from node v *)
-        H.add h v true;
-        G.iter_succ
-          (fun w ->
-            (* modify line ↓ exit only if we found start*)
-              try if H.find h w && String.equal w start then raise Exit
-              with Not_found -> Stack.push w stack)
-          g v;
-      end
-    done
-  in
-  try
-    Stack.push start stack; loop ();
-    false
-  with Exit ->
-    true
-(***********)
-let is_rec = is_in_cycle
-
-let print_graph (g:G.t) (name:string)= 
-  let oc = open_out ("graphs/"^name^".dot") in
-  Dot.output_graph oc g;
-  (* Printf.printf "graph put in %s.dot\n" name; *)
-  close_out oc
-
-(* return true if g depends on f*)
-let is_rec_call (dep: G.t) f g = let pathchecker = Path.create dep in Path.check_path pathchecker g f 
 
 
 (* return true if e is in the list of variables vars*)
@@ -93,11 +12,21 @@ let is_in_var vars e =
   | Var(z) -> List.mem z vars 
   | _ -> false
 
+let print_scclist lstlst =
+  let print_list lst = 
+    print_string "[";
+    List.iter (fun e -> print_string @@ e^";" ) lst ;
+    print_string "]";
+  in 
+  print_string "[";
+  List.iter (fun l ->  print_list l;  ) lstlst;
+  print_string "]"
+
+
 
 let check_syntax (prog:prog) =
   let dep = dep_graph prog in 
   print_graph dep "depedency";
-
   (*return true if elist == vars element by element*)
   let rec match_vars vars elist = match vars,elist with 
     | [],[] -> true 

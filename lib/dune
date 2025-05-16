@@ -9,4 +9,5 @@
  typeinfer 
  interpret 
  interpretMS
- tierbetter))
+ tierwithdupl
+ graphF))

@@ -126,19 +126,19 @@ let tier_prog (verbose:bool) (prog:prog):unit=
     print_classes prog.fundefs funUFmap;
 
   (* we now create the conditions of tiering (for recursive calls) in a graph *)
-  let dep = Syntax.dep_graph prog in 
-  let constraints = Syntax.G.create () in 
+  let dep = GraphF.dep_graph prog in 
+  let constraints = GraphF.G.create () in 
   let add_constraint f = 
-    if Syntax.is_rec dep f.name then
+    if GraphF.is_rec dep f.name then
       let elems = SMap.find f.name funUFmap in 
-      Syntax.G.add_edge constraints (UF.get @@ List.hd elems) (UF.get @@ List.hd @@ List.tl elems);
+      GraphF.G.add_edge constraints (UF.get @@ List.hd elems) (UF.get @@ List.hd @@ List.tl elems);
   in
   List.iter add_constraint prog.fundefs ;
   if verbose then 
-    Syntax.print_graph constraints "constraints";
+    GraphF.print_graph constraints "constraints";
   
   (*then we check if there is a cycle in the constraint graph*)
-  if Syntax.DFS.has_cycle constraints then
+  if GraphF.DFS.has_cycle constraints then
     failwith "tier error: the constraint graph has a loop";
 
   Printf.printf "tiering done\n";
