@@ -67,3 +67,9 @@ let add_association venv xlist vlist =
     invalid_arg @@ Printf.sprintf "%d!=%d cannot associate xlist with vlist" lx lv 
   else
   List.fold_left2 (fun acc x v -> SMap.add x v acc) venv xlist vlist
+
+
+let rec find_last l = match l with 
+  | [] -> raise Not_found 
+  | [x] -> x 
+  | _::ls-> find_last ls

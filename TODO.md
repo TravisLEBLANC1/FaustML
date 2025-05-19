@@ -1,5 +1,6 @@
 - check for linearity of variables in functions
 - check for linearity in constructor/function name
+- check that type names exists 
 - check for exaustivity of matches
 - find index efficiently in interpretMS 
 - polymorphism for tier??
