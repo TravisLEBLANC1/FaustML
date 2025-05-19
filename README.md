@@ -40,6 +40,8 @@ the input should have the form a list of values
 if there is only 1 input, a simple value without bracket also works
 `[v]` or `v`
 
+**careful!** the program for the moment require the linearity of variable inside function. If the is multiple times the same variable typecheck and tiering will not work properly
+
 ## Graphs
 
 we can translate the constraints graph to a pdf using dot:
