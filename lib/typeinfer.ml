@@ -86,8 +86,12 @@ let type_inf_prog (verbose:bool) (prog:prog) =
   in
 
   let rec infer_expr e gvenv = match e with 
-    | Var(x) -> SMap.find x gvenv
-    
+    | Var(x) -> begin
+      try 
+        SMap.find x gvenv
+      with 
+      | Not_found -> failwith @@"type error: variable "^x^" not found"
+    end
     | Let(x,e1,e2) -> 
       let t = infer_expr e1 gvenv in 
       infer_expr e2 (SMap.add x t gvenv)
