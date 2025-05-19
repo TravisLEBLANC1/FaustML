@@ -93,7 +93,3 @@ let mul(x,y) = match x with
 let square(x) = mul(x,x)
 
 let cube(x) = mul(x,mul(x,x))
-
-let power(n,x) = match n with 
-  | Z -> S(Z)
-  | S(m) -> mul(x,power(m,x))
