@@ -117,7 +117,10 @@ let type_inf_prog (verbose:bool) (prog:prog) =
     let Branch((c,xlist),e) = b in      (*branch of the form c(xlist) -> e*)
     check_constr fenv c;
     let GFun(tlist, t) = SMap.find c fenv in (*type c:tlist -> t*)
-    let te = infer_expr e (add2venv xlist tlist gvenv) in   (*te=type of e*)
+    let newgvenv =
+      try add2venv xlist tlist gvenv 
+      with Invalid_argument(_) -> failwith @@"invalide number of argument in match of "^c in
+    let te = infer_expr e newgvenv in   (*te=type of e*)
     (t, te)         (* type b:t->te*)
   in 
 

@@ -129,7 +129,7 @@ let eval_prog verbose prog vlist =
     let newvenv = add_association venv xlist vlist in 
     eval newvenv e 
   in
-  let f = List.hd fundefs in
+  let f = find_last fundefs in
   let loclist = init_heap vlist in 
   let venv =  try add_association SMap.empty f.param loclist  
   with Invalid_argument(_) -> 

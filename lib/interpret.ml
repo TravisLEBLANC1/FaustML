@@ -45,7 +45,7 @@ and eval_branch venv fundefs v b =
   eval newvenv fundefs e 
 
 let eval_prog prog vlist = 
-  let f = List.hd prog.fundefs in
+  let f = find_last prog.fundefs in
   let venv =  try add_association SMap.empty f.param vlist  
     with Invalid_argument(_) -> 
       invalid_arg @@ Printf.sprintf "wrong number of argument as input %s takes %d" f.name (List.length f.param)
