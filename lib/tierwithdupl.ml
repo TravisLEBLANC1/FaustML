@@ -11,9 +11,10 @@ type funC = {    (* function constrains*)
 type funCMap = funC SMap.t   (*function constrains map*)
 type venv = id SMap.t
 
-let cpt = ref 0 
-let make_tmp_id () = incr cpt; Printf.sprintf "E%d" !cpt
-let make_id fname xname = incr cpt; Printf.sprintf "%s%s_%d" fname xname !cpt
+let cpt_id = ref 0 
+let cpt_copy = ref 0
+let make_tmp_id () = incr cpt_id; Printf.sprintf "E%d" !cpt_id
+let make_id fname xname = incr cpt_id; Printf.sprintf "%s%s" fname xname
 let make_id_res fname = Printf.sprintf "%sR" fname
 
 let create_funUFmap funs dep = 
@@ -32,21 +33,37 @@ let majvenv fname (venv:venv) x =
   let u' = make_id fname x in 
   SMap.add x u' venv 
 
-let constrains_fun verbose funCMap (f:fun_def) = 
+let constrains_fun dep verbose funCMap (f:fun_def) = 
   let fconst = SMap.find f.name funCMap in
 
   let isleq a b = 
-    Printf.printf "%s <= %s\n" a b;
+    (* Printf.printf "%s <= %s\n" a b; *)
     GraphF.G.add_edge fconst.leqgraph a b
   in  
   let fun_union fconst gconst clist =  
     GraphF.inplace_union fconst.ltgraph gconst.ltgraph;
     GraphF.inplace_union fconst.leqgraph gconst.leqgraph;
     List.iter2 isleq gconst.param clist
-    (* not trivially true for recursive calls
-    but it should work because g will call f and we will have xf <= xg and xg <= xf for each x
-    plus we do want the union of constraints in both way*)
   in
+  let getgconst =
+    fun g ->  
+    let gconst = SMap.find g funCMap in 
+    if GraphF.is_rec_call dep f.name g then begin
+      
+      gconst 
+    end
+    else begin
+      incr cpt_copy;
+      (* Printf.printf "%s-> %s copy%d\n" f.name g !cpt_copy; *)
+      let map_id = fun x -> Printf.sprintf "%scp%d" x !cpt_copy in 
+      let leqgraph = GraphF.G.map_vertex map_id @@ GraphF.G.copy gconst.leqgraph in 
+      let ltgraph = GraphF.G.map_vertex map_id @@ GraphF.G.copy gconst.ltgraph in 
+      let param = List.map map_id gconst.param in 
+      let res = map_id gconst.res in 
+      {res;param;ltgraph;leqgraph}
+    end
+  in 
+
 
   let rec constrains_expr venv expr = 
     match expr with
@@ -54,7 +71,6 @@ let constrains_fun verbose funCMap (f:fun_def) =
 
     | Let(x,e1,e2) -> 
       let c = constrains_expr venv e1  in 
-      isleq x c; 
       constrains_expr (SMap.add x c venv) e2 
     
     | Cstr(_,elist) -> 
@@ -69,9 +85,9 @@ let constrains_fun verbose funCMap (f:fun_def) =
       tmpid 
 
     | App(g,elist) -> 
-      let gconst = SMap.find g funCMap in 
       let clist = List.map (constrains_expr venv) elist in 
-      fun_union fconst gconst clist;
+      let gconst = getgconst g in 
+      fun_union fconst gconst clist ;
       gconst.res
 
   and constrains_branch c tmpid venv b = 
@@ -87,20 +103,20 @@ let constrains_fun verbose funCMap (f:fun_def) =
   let idbody = constrains_expr venv f.body in 
   isleq fconst.res idbody;
 
-  if verbose then 
+  if verbose then (
     GraphF.print_graph fconst.leqgraph @@ f.name^"_leq";
-    GraphF.print_graph fconst.ltgraph @@ f.name^"_lt"
+    GraphF.print_graph fconst.ltgraph @@ f.name^"_lt")
 
 
-let testfunconst fname fconst =
+let testfunconst verbose fname fconst =
   let sccmap,sccgraph = GraphF.create_scc fconst.leqgraph in 
-  GraphF.print_graph sccgraph @@ fname^"_pre_sccgraph";
   GraphF.G.iter_edges (fun e1 e2 -> 
     let scce1,scce2 = SMap.find e1 sccmap,SMap.find e2 sccmap in 
     GraphF.G.add_edge sccgraph scce1 scce2) 
     fconst.ltgraph ;
-
-  GraphF.print_graph sccgraph @@ fname^"_sccgraph";
+  if verbose then (
+    GraphF.print_graph sccgraph @@ fname^"_pre_sccgraph";
+    GraphF.print_graph sccgraph @@ fname^"_sccgraph");
   not @@ GraphF.DFS.has_cycle sccgraph
 
 let tier_prog (verbose:bool) (prog:prog):unit= 
@@ -108,9 +124,10 @@ let tier_prog (verbose:bool) (prog:prog):unit=
   let funCMap = create_funUFmap prog.fundefs dep in (* map function to unionfind elems*)
   
   let toporder = List.map (fun fname -> find_fun fname prog.fundefs) @@ List.concat @@ GraphF.create_scc_order dep in 
-  List.iter (constrains_fun verbose funCMap) toporder;
+  List.iter (constrains_fun dep verbose funCMap) toporder;
 
-  if not @@ List.for_all (fun f -> testfunconst f.name (SMap.find f.name funCMap)) prog.fundefs then 
+  if not @@ List.for_all (fun f -> testfunconst verbose f.name (SMap.find f.name funCMap)) prog.fundefs then 
     failwith "the scc graph has a cycle-> not tierable";
   
+  Printf.printf "tiering done \n";
   ()
