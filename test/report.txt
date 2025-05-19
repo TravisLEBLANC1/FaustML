@@ -1,0 +1,24 @@
+Tests report
+
+const.ml: OK
+cube_quimarche.ml: OK
+cube_voulu.ml: OK
+eq_quimarche.ml: OK
+eq_voulu.ml: OK
+rabbits.ml: OK
+stdlib.ml: OK
+test2.ml: FAILED with 1 instead of 0
+test3.ml: OK
+test4.ml: OK
+test5.ml: OK
+tree.ml: FAILED with 1 instead of 0
+score: 10 / 12
+
+exp.ml: OK
+fact.ml: OK
+nbleaves.ml: OK
+power.ml: OK
+sort.ml: OK
+score: 5 / 5
+
+total score: 15 / 17

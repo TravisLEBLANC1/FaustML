@@ -100,4 +100,4 @@ let () =
   with
   | e ->
      eprintf "Anomaly: %s\n@." (Printexc.to_string e);
-     exit 2
+     exit 1

@@ -5,7 +5,7 @@
  (infer true))  
 (executable
  (public_name FaustML)
- (name main)
+ (name faust)
  (libraries faustlib)
   (promote (until-clean))
  (flags ()))
