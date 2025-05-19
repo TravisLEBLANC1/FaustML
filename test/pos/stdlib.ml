@@ -61,50 +61,22 @@ let ifelse(b,e1,e2) = match b with
 
 (******** Integer operations ********)
 
-
+let eq(a,b) = _and(leq(b,a),leq(a,b))
 let leq(a,b) = iszero(sub(b,a))
-let leq2(a,b) = iszero2(sub2(b,a))
-
 
 let iszero(x) = match x with
   | Z -> True 
   | S(x2) -> False
 
-let iszero2(x) = match x with
-  | Z -> True 
-  | S(x2) -> False
 
 let pred(x) = match x with 
   | Z -> Z 
   | S(y) -> y
 
-let pred2(x) = match x with 
-  | Z -> Z 
-  | S(y) -> y
-
-(*tier: i->k with i>k*)
-let idnat(n) = match n with 
-  | S(n1) -> S(idnat(n1))
-  | Z -> Z
-
-let idnat2(n) = match n with 
-  | S(n1) -> S(idnat2(n1))
-  | Z -> Z
-
-let idnat3(n) = match n with 
-  | S(n1) -> S(idnat3(n1))
-  | Z -> Z
-
-
 (*tier: i,j->j with i > j*)
 let add(x,y) = match x with 
   | Z -> y
   | S(x2) -> S(add(x2,y)) 
-
-(*tier: i,j->k with i,j > k*)
-let add2(x,y) = match x with 
-  | Z -> y
-  | S(x2) -> S(add2(x2,y)) 
 
 (* y - x
   tier: i,j->j with i>j*)
@@ -112,24 +84,16 @@ let sub(x,y) = match x with
   | Z -> y 
   | S(x2) -> pred(sub(x2,y)) 
 
-(* y - x
-  tier: i,j->j with i>j*)
-let sub2(x,y) = match x with
-  | Z -> y 
-  | S(x2) -> pred2(sub2(x2,y)) 
-
-
 
 (*tier: i,j->k with i,j > k*)
 let mul(x,y) = match x with 
   | Z -> Z
   | S(x2) -> add(y, mul(x2,y))
 
-let mul2(x,y) = match x with 
-  | Z -> Z
-  | S(x2) -> add2(y, mul2(x2,y))
-
 let square(x) = mul(x,x)
 
+let cube(x) = mul(x,mul(x,x))
 
-(* tier i,j->k with i,j>k*)
+let power(n,x) = match n with 
+  | Z -> S(Z)
+  | S(m) -> mul(x,power(m,x))
