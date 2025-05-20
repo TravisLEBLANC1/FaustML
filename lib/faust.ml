@@ -53,7 +53,7 @@ and branch2string (b:type_branch) =
 let rec value2string (v:value) = 
   let VCstr(c,vlist) = v in 
   if List.is_empty vlist then 
-    c^"()"
+    c
   else
     c^"("^(value2string @@ List.hd vlist)^List.fold_right (fun v acc -> ","^(value2string v)^acc) (List.tl vlist) ")"
 

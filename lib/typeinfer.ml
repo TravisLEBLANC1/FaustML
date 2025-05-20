@@ -128,8 +128,11 @@ let type_inf_prog (verbose:bool) (prog:prog) =
     check_constr fenv f.name;
     let GFun(_,r) as funt =  SMap.find f.name fenv in 
     let venv = create_venv f funt in 
-    let t = infer_expr f.body venv in
-    unify t r;
+    try
+      let t = infer_expr f.body venv in
+      unify t r;
+    with
+    Failure(m) -> failwith @@"failing in function "^f.name^": "^m
   in 
 
   List.iter (fun f -> (*Printf.printf "looking at %s \n" f.name;*) infer_fun f;(* print_subst (); print_string "---\n"*)) prog.fundefs;

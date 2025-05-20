@@ -64,6 +64,8 @@ let ifelse(b,e1,e2) = match b with
 let eq(a,b) = _and(leq(b,a),leq(a,b))
 let leq(a,b) = iszero(sub(b,a))
 
+let lt(a,b) = _and(leq(a,b),_not(leq(b,a)))
+
 let iszero(x) = match x with
   | Z -> True 
   | S(x2) -> False
