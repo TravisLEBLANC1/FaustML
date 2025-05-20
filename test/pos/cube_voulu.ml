@@ -10,3 +10,5 @@ and mul(x,y) = match x with
   | Z -> Z
   | S(x2) -> add(y, mul(x2,y))
 
+and main(x) = cube(x)
+

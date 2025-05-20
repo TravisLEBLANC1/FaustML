@@ -34,3 +34,5 @@ and sub(x,y) = match x with
 and pred(x) = match x with 
   | Z -> Z 
   | S(y) -> y
+
+and main(a,b) = eq(a,b)

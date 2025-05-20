@@ -73,3 +73,9 @@ let rec find_last l = match l with
   | [] -> raise Not_found 
   | [x] -> x 
   | _::ls-> find_last ls
+
+let find_main fundefs = 
+  try 
+    List.find (fun f-> String.equal f.name "main") fundefs
+  with 
+    Not_found -> failwith "error: missing main function"
