@@ -100,7 +100,10 @@ let type_inf_prog (verbose:bool) (prog:prog) =
       check_constr fenv c;
       let GFun(tlist, t) = SMap.find c fenv in
       let tlist' = infer_exprlist elist gvenv in 
-      unify_list tlist tlist'; 
+      (try
+        unify_list tlist tlist'
+      with 
+        Invalid_argument(_) -> failwith @@ "wrong number of argument for "^c);
       t
 
     | Match(e, blist) -> 

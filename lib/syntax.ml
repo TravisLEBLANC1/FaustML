@@ -39,10 +39,12 @@ let check_syntax (prog:prog) =
     | Let(_,e1,e2) -> check_expr f args safe e1; check_expr f args safe e2
     | Cstr(_,elst) -> List.iter (check_expr f args safe) elst 
     | App(h, elst) -> 
-      if is_rec_call dep f h then
+      if is_rec_call dep f h then(
         if not(match_vars (List.tl args) (List.tl elst)) || not(is_in_var safe (List.hd elst)) then 
           let y = (concat (List.tl args) ",") in 
-          failwith @@ Printf.sprintf "the recursif call of "^f^" must have the form "^h^"(x1,"^y^") with x1 a match var of the first argument";
+          failwith @@ Printf.sprintf "the recursif call of "^f^" must have the form "^h^"(x1,"^y^") with x1 a match var of the first argument";)
+      else 
+          List.iter (check_expr f args safe) elst
     | Match(e, blst) -> 
       if is_var (List.hd args) e then 
         List.iter (check_branch_safe f args safe) blst  
