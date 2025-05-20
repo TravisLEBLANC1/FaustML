@@ -2,10 +2,9 @@ type tree = L | N of nat*tree*tree
 type bst = Lbst | Nbst of nat*bst*bst
 type nat = Z | S of nat
 type boolean = True | False 
-type infnat = Nat of nat | Inf | MInf 
-type boolnatpair = Pair of boolean*infnat*infnat
 type natlist = Nil | Cons of nat*natlist
-
+type infnat = Nat of nat | NInf | PInf
+type boolnatpair = Pair of boolean*infnat*infnat
 
 (********* intergers ********)
 let add(x,y) = match x with 
@@ -41,13 +40,32 @@ let _and(b1,b2) = match b1 with
   | False -> False
   | True -> b2
 
+let _not(b) = match b with 
+  | True -> False 
+  | False -> True
+
 let leq(a,b) = iszero(sub(b,a))
+
+let leq_inf(a,b) = match a with 
+  | Nat(an) -> leq(an,b)
+  | NInf -> True 
+  | PInf -> False 
+
+let lt_inf(a,b) = match b with 
+  | Nat(bn) -> lt(a,bn)
+  | NInf -> False 
+  | PInf -> True
+
+let lt(a,b) = _and(leq(a,b),_not(leq(b,a)))
 
 let eq(a,b) = _and(leq(b,a),leq(a,b))
 
 (*i,i->i*)
 let max(x,y) = ifelsenat(leq(x,y),y,x)
 
+let ifelse(b,e1,e2) = match b with 
+  | True -> e1 
+  | False -> e2 
 
 (****** list operations *******)
 
@@ -55,12 +73,11 @@ let concat(l1,l2) = match l1 with
   | Nil -> l2
   | Cons(x,l1') -> Cons(x,concat(l1',l2))
 
-
 (****** classical trees *******)
 
 let create(n) = match n with 
   | Z -> L
-  | S(m) -> let t = create(m) in N(0,t,t)
+  | S(m) -> let t = create(m) in N(Z,t,t)
 
 let height(t) = match t with 
   | L -> Z
@@ -68,7 +85,7 @@ let height(t) = match t with
 
 let reverse(t) = match t with 
   | L -> L 
-  | N(x,t1,t2) -> N(reverse(t2), reverse(t1))
+  | N(x,t1,t2) -> N(x,reverse(t2), reverse(t1))
 
 let addalltree(t,c) = match t with 
   | L -> L 
@@ -84,19 +101,122 @@ let getval(t) = match t with
   | Nbst(v1,t1,t2) -> v1 
 
 
-let bstinsert(t,n) = 
-  match t with 
-    | Lbst -> Nbst(n,Lbst,Lbst)
-    | Nbst(m,t1,t2) ->
-      ifelsebst(leq(n,m), 
-        Nbst(m,bstinsert(t1,n),t2), 
-        Nbst(m,t1,bstinsert(t2,n)))
+let bstsearch(t,n) = match t with 
+  | Lbst -> False 
+  | Nbst(m,t1,t2) -> 
+    match leq(n,m) with 
+    | True -> (match leq(m,n) with 
+      | True -> True 
+      | False -> bstsearch(t1,n))
+    | False -> bstsearch(t2,n) 
+
+let bstinsert(t,n) = match t with 
+  | Lbst -> Nbst(n,Lbst,Lbst)
+  | Nbst(m,t1,t2) ->
+    match leq(n,m) with 
+      | True -> Nbst(m,bstinsert(t1,n),t2)
+      | False -> Nbst(m,t1,bstinsert(t2,n))
+
+let bstgetmax(t) = match t with 
+  | Lbst -> Z (*error*)
+  | Nbst(n,t1,t2) -> match t2 with 
+    | Lbst -> n
+    | Nbst(_,_,_) -> bstgetmax(t2)
+
+let bstextractmin(t) = match t with 
+  | Lbst -> Lbst
+  | Nbst(n,t1,t2) -> match t1 with 
+    | Lbst -> t1
+    | Nbst(_,_,_) -> Nbst(n,bstextractmin(t1),t2)
+
+let bstgetmin(t) = match t with 
+  | Lbst -> Z (*error*)
+  | Nbst(n,t1,t2) -> match t1 with 
+    | Lbst -> n
+    | Nbst(_,_,_) -> bstgetmin(t1) 
+
+let bstremove(t,n) = match t with
+  | Lbst-> Lbst 
+  | Nbst(m,t1,t2) ->
+    match leq(n,m) with 
+      | True -> (match leq(m,n) with 
+        | True -> let newm = bstgetmin(t2) in (
+          match newm with 
+            | Z -> t1 
+            | S(_) -> Nbst(newm, t1, bstextractmin(t2))) 
+        | False -> Nbst(m, bstremove(t1,n), t2))
+      | False -> Nbst(m, t1, bstremove(t2,n))
 
 
+(* let bstremove(t,n) = match t with
+  | Lbst-> Lbst 
+  | Nbst(m,t1,t2) ->
+    if leq(n,m) then 
+      if leq(m,n) then
+        let newm = bstgetmin(t2) in (
+          match newm with 
+            | Z -> t1 
+            | S(_) -> Nbst(newm, t1, bstextractmin(t2))) 
+      else 
+        Nbst(m,bstremove(t1,n),t2)
+    else
+      Nbst(m,t1,bstremove(t2,n)) *)
 
 
-let main(n) = 
-  let left = Nbst(S(S(Z)),Nbst(Z,Lbst,Lbst),Lbst) in 
-  let right = Nbst(S(S(S(S(S(Z))))), Lbst,Lbst) in 
-  let t = Nbst(S(S(S(S(Z)))), left, right) in 
-  bstinsert(t,n)
+let getmin(p,n) =match p with 
+  | Pair(_,m,_) -> 
+    match m with 
+      | Nat(m1) -> m
+      | NInf -> Nat(n) 
+      | PInf -> Nat(n) 
+  
+
+let getmax(p,n) = match p with 
+  | Pair(_,_,m) ->
+    match m with 
+      | Nat(m1) -> m
+      | NInf -> Nat(n)
+      | PInf -> Nat(n) 
+
+let getbool(p) = match p with 
+  | Pair(b,_,_) -> b
+
+let conjpair(p1,p2) = 
+  let b1 = getbool(p1) in 
+  let b2 = getbool(p2) in 
+  _and(b1, b2)
+
+let isvalidpair(n,p1,p2) = match p1 with 
+  | Pair(_,_,m1) -> match p2 with 
+    | Pair(_,n2,_) -> _and(leq_inf(m1,n), lt_inf(n,n2))
+
+
+let isbst_aux(t) = match t with 
+  | Lbst -> Pair(True, PInf, NInf)
+  | Nbst(n,t1,t2) -> 
+    let p1 = isbst_aux(t1) in 
+    let p2 = isbst_aux(t2) in 
+    ifelse(isvalidpair(n,p1,p2),
+      Pair(conjpair(p1,p2),getmin(p1,n),getmax(p2,n)),
+      Pair(False, getmin(p1,n),getmax(p2,n)))
+let isbst(t) = getbool(isbst_aux(t))
+
+let testbst() = 
+  let ten = S(S(S(S(S(S(S(S(S(S(Z)))))))))) in 
+  let eleven = S(ten) in 
+  let twelve = S(eleven) in
+  let five = S(S(S(S(S(Z)))))in 
+  let two = S(S(Z)) in 
+  Nbst(ten, Nbst(five, Nbst(two,Lbst,Lbst), Nbst(twelve, Lbst,Lbst)), Nbst(eleven,Lbst,Lbst))
+
+let testbst1() = 
+  let ten = S(S(S(S(S(S(S(S(S(S(Z)))))))))) in 
+  let eleven = S(ten) in 
+  let twelve = S(eleven) in
+  let five = S(S(S(S(S(Z)))))in 
+  let two = S(S(Z)) in 
+  Nbst(ten, Nbst(five, Nbst(two,Lbst,Lbst), Lbst), Nbst(twelve,Nbst(eleven, Lbst,Lbst),Lbst))
+
+let main() = 
+  let t=testbst1() in 
+  isbst(t)

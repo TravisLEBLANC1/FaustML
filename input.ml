@@ -1,1 +1,1 @@
-S(S(S(Z)))
+Nbst(S(Z), Lbst, Lbst)

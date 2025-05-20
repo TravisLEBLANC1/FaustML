@@ -110,13 +110,15 @@ let constrains_fun dep verbose funCMap (f:fun_def) =
 
 let testfunconst verbose fname fconst =
   let sccmap,sccgraph = GraphF.create_scc fconst.leqgraph in 
+  if verbose then 
+    GraphF.print_graph sccgraph @@ fname^"_pre_sccgraph";
+  
   GraphF.G.iter_edges (fun e1 e2 -> 
     let scce1,scce2 = SMap.find e1 sccmap,SMap.find e2 sccmap in 
     GraphF.G.add_edge sccgraph scce1 scce2) 
     fconst.ltgraph ;
-  if verbose then (
-    GraphF.print_graph sccgraph @@ fname^"_pre_sccgraph";
-    GraphF.print_graph sccgraph @@ fname^"_sccgraph");
+  if verbose then 
+    GraphF.print_graph sccgraph @@ fname^"_sccgraph";
   not @@ GraphF.DFS.has_cycle sccgraph
 
 let tier_prog (verbose:bool) (prog:prog):unit= 
