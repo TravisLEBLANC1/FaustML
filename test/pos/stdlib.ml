@@ -61,6 +61,14 @@ let ifelse(b,e1,e2) = match b with
 
 (******** Integer operations ********)
 
+let iseven(x) = match x with 
+  | Z -> True
+  | S(y) -> isodd(y)
+
+let isodd(y) = match y with 
+  | Z -> False 
+  | S(x) -> iseven(x)
+
 let eq(a,b) = _and(leq(b,a),leq(a,b))
 let leq(a,b) = iszero(sub(b,a))
 
@@ -93,5 +101,9 @@ let mul(x,y) = match x with
   | S(x2) -> add(y, mul(x2,y))
 
 let square(x) = mul(x,x)
-
 let cube(x) = mul(x,mul(x,x))
+let power4(x) = mul(mul(x,x),mul(x,x))
+let power5(x) = mul(x,power4(x))
+let power6(x) = cube(square(x)) 
+
+let main(x) = iseven(x)
