@@ -8,7 +8,7 @@
 %token <string> CSTR
 %token BAR COMMA EQ
 %token TYPE OF STAR
-%token LET IN
+%token LET REC AND IN
 %token MATCH WITH ARROW
 %token LPAR RPAR LBRACKET RBRACKET
 %token SEMI 
@@ -22,11 +22,21 @@
 %%
     
 program:
-| typs=list(type_def) funs=list(fun_def) EOF { {typedefs = typs; fundefs = funs} }
+| typs=list(type_def) funs=list(let_fun_def) EOF { {typedefs = typs; fundefs = funs} }
+| typs=list(type_def) f=let_rec_fun_def funs=list(rec_fun_def) EOF  { {typedefs = typs; fundefs = f::funs} }
 ;
 
+let_rec_fun_def:
+| LET REC f=fun_def { f }
+;
+rec_fun_def:
+| AND f=fun_def { f }
+
+let_fun_def:
+| LET f=fun_def { f }
+
 fun_def:
-| LET f=IDENT LPAR params=separated_list(COMMA, IDENT) RPAR EQ e=expression { {name=f; body=e;param=params;} }
+| f=IDENT LPAR params=separated_list(COMMA, IDENT) RPAR EQ e=expression { {name=f; body=e;param=params;} }
 ;
 
 type_def:
