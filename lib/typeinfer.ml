@@ -1,13 +1,19 @@
 open Faust 
-open Typecheck
 (*****
 check for typing with the function typ_inf_prog 
 ******)
+type basetype = string                     (* t *)
+type funtype  = Fun of basetype list *basetype    (*t1..tn -> t*)
+                                            (*T is which types C come from, t1..tn are the types of the arguments*)
+type venv = basetype SMap.t           (* var => typ*)
+type fenv = funtype SMap.t            (* f ==> (t1..tn->t)*)
 
 type gtype = Alpha of string | Base of basetype
 type gfuntype = GFun of gtype list*gtype
 type gfenv = gfuntype SMap.t
 type gvenv = gtype SMap.t           (* var => gtyp*)
+
+let default_boolgtype = Base(fst(Faust.default_booltype))
 
 let fenv2gfenv (fenv:fenv):gfenv = 
   let basetype2gtype b = Base(b) in 
@@ -19,7 +25,23 @@ let fenv2gfenv (fenv:fenv):gfenv =
 let add2venv xlist tlist venv = 
   List.fold_left2 (fun acc x t -> SMap.add x t acc ) venv xlist tlist
 
+let check_constr fenv c = 
+  if not @@ SMap.mem c fenv then 
+    failwith @@ Printf.sprintf "type error: constr %s not found " c
+
 let create_venv f ft = let GFun(xlist, _) = ft in add2venv f.param xlist SMap.empty
+
+(* construct the type environement with the type of all constructors*)
+let create_tenv typel : fenv = 
+  let add_to_env (t:type_def) tenv =
+    let (tname,tlist) = t in  
+    let add_to_env_constr (t:type_constr) tenv = 
+      let (cname,subtypes) = t in  
+      SMap.add cname (Fun(subtypes,tname)) tenv 
+    in
+    List.fold_right add_to_env_constr tlist tenv
+  in
+  List.fold_right add_to_env typel SMap.empty 
 
 let type_inf_prog (verbose:bool) (prog:prog) = 
   let tenv = fenv2gfenv @@ create_tenv prog.typedefs in 
@@ -112,6 +134,12 @@ let type_inf_prog (verbose:bool) (prog:prog) =
       (* check if all branch have the same input and output type *)
       List.iter (fun b -> let (tb1,tb2) = infer_branch b gvenv in unify te tb1; unify tb tb2;) blist;
       tb
+    
+    | IfElse(e1,e2,e3) -> 
+      let te1,te2,te3 = infer_expr e1 gvenv,infer_expr e2 gvenv,infer_expr e3 gvenv in 
+      unify te1 default_boolgtype;
+      unify te2 te3;
+      te3
 
   and infer_exprlist (exprl: expr list) (gvenv:gvenv) :(gtype list) =
     List.fold_left (fun acc e -> infer_expr e gvenv :: acc) [] (List.rev exprl)

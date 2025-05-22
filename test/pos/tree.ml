@@ -1,10 +1,9 @@
 type tree = L | N of nat*tree*tree
 type bst = Lbst | Nbst of nat*bst*bst
 type nat = Z | S of nat
-type boolean = True | False 
 type natlist = Nil | Cons of nat*natlist
 type infnat = Nat of nat | NInf | PInf
-type boolnatpair = Pair of boolean*infnat*infnat
+type boolnatpair = Pair of bool*infnat*infnat
 
 (********* intergers ********)
 let add(x,y) = match x with 
@@ -24,21 +23,11 @@ let mul(x,y) = match x with
   | Z -> Z
   | S(x2) -> add(y, mul(x2,y))
 
-let ifelsenat(b,e1,e2) = match b with 
-  | True -> e1 
-  | False -> e2 
-
-let ifelsebst(b,e1,e2) = match b with 
-  | True -> e1 
-  | False -> e2 
-
 let iszero(x) = match x with 
-  | Z -> True 
-  | S(x2) -> False
+  | Z -> true 
+  | S(x2) -> false
 
-let _and(b1,b2) = match b1 with 
-  | False -> False
-  | True -> b2
+let _and(b1,b2) = if b1 then b2 else false
 
 let _not(b) = match b with 
   | True -> False 
@@ -61,11 +50,7 @@ let lt(a,b) = _and(leq(a,b),_not(leq(b,a)))
 let eq(a,b) = _and(leq(b,a),leq(a,b))
 
 (*i,i->i*)
-let max(x,y) = ifelsenat(leq(x,y),y,x)
-
-let ifelse(b,e1,e2) = match b with 
-  | True -> e1 
-  | False -> e2 
+let max(x,y) = if leq(x,y) then y else x
 
 (****** list operations *******)
 
@@ -104,11 +89,13 @@ let getval(t) = match t with
 let bstsearch(t,n) = match t with 
   | Lbst -> False 
   | Nbst(m,t1,t2) -> 
-    match leq(n,m) with 
-    | True -> (match leq(m,n) with 
-      | True -> True 
-      | False -> bstsearch(t1,n))
-    | False -> bstsearch(t2,n) 
+    if leq(n,m) then 
+      if leq(m,n) then 
+        True 
+      else
+        bstsearch(t1,n)
+    else
+      bstsearch(t2,n)
 
 let bstinsert(t,n) = match t with 
   | Lbst -> Nbst(n,Lbst,Lbst)
@@ -135,7 +122,7 @@ let bstgetmin(t) = match t with
     | Lbst -> n
     | Nbst(_,_,_) -> bstgetmin(t1) 
 
-let bstremove(t,n) = match t with
+(* let bstremove(t,n) = match t with
   | Lbst-> Lbst 
   | Nbst(m,t1,t2) ->
     match leq(n,m) with 
@@ -145,10 +132,10 @@ let bstremove(t,n) = match t with
             | Z -> t1 
             | S(_) -> Nbst(newm, t1, bstextractmin(t2))) 
         | False -> Nbst(m, bstremove(t1,n), t2))
-      | False -> Nbst(m, t1, bstremove(t2,n))
+      | False -> Nbst(m, t1, bstremove(t2,n)) *)
 
 
-(* let bstremove(t,n) = match t with
+ let bstremove(t,n) = match t with
   | Lbst-> Lbst 
   | Nbst(m,t1,t2) ->
     if leq(n,m) then 
@@ -160,7 +147,7 @@ let bstremove(t,n) = match t with
       else 
         Nbst(m,bstremove(t1,n),t2)
     else
-      Nbst(m,t1,bstremove(t2,n)) *)
+      Nbst(m,t1,bstremove(t2,n)) 
 
 
 let getmin(p,n) =match p with 
@@ -196,9 +183,12 @@ let isbst_aux(t) = match t with
   | Nbst(n,t1,t2) -> 
     let p1 = isbst_aux(t1) in 
     let p2 = isbst_aux(t2) in 
-    ifelse(isvalidpair(n,p1,p2),
-      Pair(conjpair(p1,p2),getmin(p1,n),getmax(p2,n)),
-      Pair(False, getmin(p1,n),getmax(p2,n)))
+    if isvalidpair(n,p1,p2) then 
+      Pair(conjpair(p1,p2),getmin(p1,n),getmax(p2,n))
+    else
+      Pair(False, getmin(p1,n),getmax(p2,n))
+      
+      
 let isbst(t) = getbool(isbst_aux(t))
 
 let testbst() = 

@@ -8,6 +8,8 @@
 %token <string> CSTR
 %token BAR COMMA EQ
 %token TYPE OF STAR
+%token TRUE FALSE
+%token IF THEN ELSE
 %token LET REC AND IN
 %token MATCH WITH ARROW
 %token LPAR RPAR LBRACKET RBRACKET
@@ -15,6 +17,8 @@
 
 %nonassoc ARROW
 %nonassoc BAR
+// %nonassoc THEN
+// %nonassoc ELSE
 
 %start program valuelist
 %type <Faustlib.Faust.prog> program 
@@ -31,9 +35,11 @@ let_rec_fun_def:
 ;
 rec_fun_def:
 | AND f=fun_def { f }
+;
 
 let_fun_def:
 | LET f=fun_def { f }
+;
 
 fun_def:
 | f=IDENT LPAR params=separated_list(COMMA, IDENT) RPAR EQ e=expression { {name=f; body=e;param=params;} }
@@ -54,6 +60,9 @@ expression:
 | f=IDENT LPAR args=separated_list(COMMA, expression) RPAR { App(f, args) }
 | c=CSTR { Cstr(c, []) }
 | c=CSTR LPAR args=separated_list(COMMA, expression) RPAR { Cstr(c, args) }
+| TRUE  { Cstr("True",[]) }
+| FALSE { Cstr("False", []) }
+| IF e1=expression THEN e2=expression ELSE e3=expression { IfElse(e1,e2,e3)}
 | MATCH e=expression WITH branches=branches { Match(e, branches) }
 | LET x=IDENT EQ e1=expression IN e2=expression
     { Let(x, e1, e2) }
