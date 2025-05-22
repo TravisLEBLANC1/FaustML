@@ -40,12 +40,6 @@ and lstlength(l) = match l with
   | Nil -> Z 
   | Cons(_,l1) -> S(lstlength(l1))
 
-
-and ifelse(b,e1,e2) = match b with 
-  | True -> e1 
-  | False -> e2 
-
-
 and main() = 
   let l = Cons(S(S(S(S(S(Z))))),Cons(S(Z),Cons(S(S(Z)),Cons(S(S(S(S(S(S(S(Z))))))),Cons(S(S(S(S(S(S(S(S(Z)))))))),Nil))))) in 
   sort(l)
