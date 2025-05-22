@@ -1,12 +1,9 @@
 type nat = Z | S of nat
-type boolean = True | False 
 
 let eq(a,b) = _and(leq(b,a),leq2(idnat(a),idnat2(b)))
 
 
-let _and(b1,b2) = match b1 with 
-  | False -> False
-  | True -> b2
+let _and(b1,b2) = if b1 then b2 else false
 
 let leq(a,b) = iszero(sub(b,a))
 let leq2(a,b) = iszero2(sub2(b,a))

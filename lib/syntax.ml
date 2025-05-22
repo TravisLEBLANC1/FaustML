@@ -50,6 +50,11 @@ let check_syntax (prog:prog) =
         List.iter (check_branch_safe f args safe) blst  
       else 
         List.iter (check_branch f args safe ) blst 
+    
+    | IfElse(e1,e2,e3) -> 
+      check_expr f args safe e1;
+      check_expr f args safe e2;
+      check_expr f args safe e3
         
   and check_branch f args safe (b:type_branch) = check_expr f args safe (branch_expr b)
   and check_branch_safe f args safe (b:type_branch) = 

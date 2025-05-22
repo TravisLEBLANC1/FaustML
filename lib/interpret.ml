@@ -32,6 +32,16 @@ let rec eval (venv:venv) (fundefs:fun_def list) = function
     let v = eval venv fundefs e in 
     eval_blist venv fundefs v blist 
 
+  | IfElse(e1,e2,e3) -> 
+    let v = eval venv fundefs e1 in 
+    let VCstr(b,_) = v in 
+    if String.equal b "True" then 
+      eval venv fundefs e2 
+    else if String.equal b "False" then
+      eval venv fundefs e3 
+    else 
+      failwith @@ "runtime error: bad ifelse arg "^b^" is not a boolean value"
+
 and eval_elist venv fundefs elist = List.map (eval venv fundefs) elist
 
 and eval_blist venv fundefs v blist = 

@@ -95,6 +95,13 @@ let tier_prog (verbose:bool) (prog:prog):unit=
         (List.tl blist);
       bu
 
+    | IfElse(e1,e2,e3) -> 
+      equiv_expr fname venv e1 |> ignore;
+      let c2 = equiv_expr fname venv e2 in 
+      let c3 = equiv_expr fname venv e3 in 
+      merge_classes c2 c3;
+      c3
+
   and equiv_exprlist (fname:string) (venv:venv) (elist:expr list) :ufelem list = 
     List.map (fun e -> equiv_expr fname venv e) elist
 

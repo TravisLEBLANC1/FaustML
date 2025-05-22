@@ -1,0 +1,23 @@
+Tests report
+
+cube_quimarche.ml: OK
+cube_voulu.ml: OK
+eq_quimarche.ml: OK
+eq_voulu.ml: OK
+fsat.ml: FAILED with 1 instead of 0
+insert_sort3.ml: FAILED with 1 instead of 0
+rabbits.ml: OK
+stdlib.ml: OK
+tree.ml: OK
+score: 7 / 9
+
+exp.ml: OK
+fact.ml: OK
+insert_sort2.ml: OK
+insert_sort.ml: OK
+nbleaves.ml: OK
+power.ml: OK
+prefix.ml: OK
+score: 7 / 7
+
+total score: 14 / 16

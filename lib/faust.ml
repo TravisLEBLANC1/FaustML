@@ -24,10 +24,11 @@ and expr =
   | Cstr of string * expr list                  (* C(e1,..,en)*)
   | App of string * expr list                   (* f(e1,..,en)*)
   | Match of expr * (type_branch list)   (*match e with c1->e1..cn->en*)
+  | IfElse of expr * expr * expr
 
 type value = VCstr of string * value list (*the value C(v1,..,vn)*)
 
-
+let (default_booltype:type_def) = ("bool", [("True",[]); ("False", [])])
 let branch_expr (b:type_branch) = let Branch((_,_),e)=b in e
 let branch_vars (b:type_branch) = let Branch((_,x),_)=b in x
 
@@ -46,6 +47,7 @@ let rec expr2string = function
   | Cstr(c,elst) -> c^"("^(concat (List.map (expr2string) elst) ",")^")"
   | App(f,elst) -> f^"("^(concat (List.map (expr2string) elst) ",")^")"
   | Match(e, blst) -> "match "^ expr2string e ^ " with \n" ^ (concat (List.map (branch2string) blst) "\n")
+  | IfElse(e1,e2,e3) -> "if "^expr2string e1 ^ " then " ^ expr2string e2 ^" else" ^ expr2string e3
 and branch2string (b:type_branch) = 
   let Branch((c,xlst),e) = b in 
   "| "^c^"("^(concat xlst ",")^") -> "^ expr2string e
@@ -59,6 +61,16 @@ let rec value2string (v:value) =
 
 let find_fun fname fundefs = 
   List.find (fun g -> String.equal g.name fname) fundefs 
+
+let find_type tname (typedefs:type_def list) = 
+  List.find_opt (fun (t,_) -> String.equal t tname) typedefs 
+
+let find_constr cname (typedefs:type_def list) = 
+  let find_constr clist = 
+   Option.is_some @@ List.find_opt (fun (c,_) -> String.equal c cname) clist 
+  in
+  List.find_opt (fun (_,clist) -> find_constr clist) typedefs 
+
 
 let add_association venv xlist vlist = 
   let lx = List.length xlist in 
@@ -79,3 +91,19 @@ let find_main fundefs =
     List.find (fun f-> String.equal f.name "main") fundefs
   with 
     Not_found -> failwith "error: missing main function"
+
+
+
+let add_default_constr (prog:prog) : prog = 
+  let check_default_constr c = 
+    if Option.is_some @@ find_constr (fst(c)) prog.typedefs then
+      failwith @@fst(c)^ " is a reserved constructor name";
+  in
+  let check_default_type t = 
+    if Option.is_some @@ find_type t prog.typedefs then
+      failwith @@"type "^t^ " is a reserved type name";
+  in
+  let (t,clist) = default_booltype in 
+  check_default_type t;
+  List.iter check_default_constr clist;
+  {typedefs = default_booltype::prog.typedefs; fundefs=prog.fundefs}

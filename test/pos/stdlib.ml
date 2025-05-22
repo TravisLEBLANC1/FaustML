@@ -1,8 +1,7 @@
-type boolean = True | False 
 type nat = Z | S of nat
-type boollist = Nil | Cons of boolean*boollist
+type boollist = Nil | Cons of bool*boollist
 type formulae = 
-    Bool of boolean
+    Bool of bool
   | And of formulae*formulae
   | Or of formulae*formulae
   | Not of formulae
@@ -26,34 +25,26 @@ let istrue(f) = match f with
     _not(b)
 
 (*tier: i->k*)
-let id(b) = match b with 
-  | True -> True 
-  | False -> False
+let id(b) = if b then true else false
 
 let forall(blist) = match blist with 
-  | Nil -> True 
+  | Nil -> true 
   | Cons(b, blist2) -> _and(b,forall(blist2))
 
 let exists(blist) = match blist with 
-  | Nil -> False 
+  | Nil -> false 
   | Cons(b, blist2) -> _or(b,exists(blist2))
 
 
 (* logical and 
    tier: i,j -> k *)
-let _and(b1,b2) = match b1 with 
-  | False -> False
-  | True -> id(b2)
+let _and(b1,b2) = if b1 then b2 else false
 
 (* logical or 
    tier: i,j -> k   *)
-let _or(b1,b2) = match b1 with 
-  | True -> True
-  | False -> id(b2)
+let _or(b1,b2) = if b1 then true else b2
 
-let _not(b) = match b with 
-  | True -> False 
-  | False -> True
+let _not(b) = if b then false else true
 
 let ifelse(b,e1,e2) = match b with 
   | True -> e1 
@@ -62,11 +53,11 @@ let ifelse(b,e1,e2) = match b with
 (******** Integer operations ********)
 
 let iseven(x) = match x with 
-  | Z -> True
+  | Z -> true
   | S(y) -> isodd(y)
 
 let isodd(y) = match y with 
-  | Z -> False 
+  | Z -> false 
   | S(x) -> iseven(x)
 
 let eq(a,b) = _and(leq(b,a),leq(a,b))
@@ -75,8 +66,8 @@ let leq(a,b) = iszero(sub(b,a))
 let lt(a,b) = _and(leq(a,b),_not(leq(b,a)))
 
 let iszero(x) = match x with
-  | Z -> True 
-  | S(x2) -> False
+  | Z -> true 
+  | S(x2) -> false
 
 
 let pred(x) = match x with 

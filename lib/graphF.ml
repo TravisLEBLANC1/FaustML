@@ -48,6 +48,7 @@ let dep_graph (prog:prog) :G.t =
     | Cstr(_,elst)-> List.iter (dep_expr f ) elst;
     | App(g, elst) -> G.add_edge dep f g; List.iter (dep_expr f ) elst;
     | Match(e,blst) -> dep_expr f e;  List.iter (dep_branch f) blst
+    | IfElse(e1,e2,e3) -> dep_expr f e1; dep_expr f e2; dep_expr f e3;
   and dep_branch (f:string) (b:type_branch) = 
     let e = Faust.branch_expr b in 
     dep_expr f e;

@@ -113,6 +113,16 @@ let eval_prog verbose prog vlist =
       let l = eval venv e in 
       eval_blist venv l blist 
 
+    | IfElse(e1,e2,e3) -> 
+      let l = eval venv e1 in 
+      let HCstr(b,_) = heap.(l) in 
+      if String.equal b "True" then 
+        eval venv e2 
+      else if String.equal b "False" then
+        eval venv e3 
+      else 
+        failwith @@ "runtime error: bad ifelse arg "^b^" is not a boolean value"
+
   and eval_elist venv elist = List.map (eval venv) elist
 
   and eval_blist venv l blist =
