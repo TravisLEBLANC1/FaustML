@@ -78,7 +78,7 @@ let () =
   try
     let c_prog  = open_in file in
     let lb_prog = Lexing.from_channel c_prog in
-    let prog = parse file Parser.program lb_prog in 
+    let prog = Faust.add_default_constr @@ parse file Parser.program lb_prog in 
     close_in c_prog;
     if !type_flag then
       Typeinfer.type_inf_prog !verbose_flag prog;

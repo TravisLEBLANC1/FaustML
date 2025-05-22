@@ -13,6 +13,11 @@
         "of",    OF;
         "match", MATCH;
         "with",  WITH;
+        "if", IF; 
+        "then", THEN;
+        "else", ELSE;
+        "true", TRUE;
+        "false", FALSE;
       ] ;
     fun s ->
       try  Hashtbl.find h s

@@ -89,6 +89,16 @@ let constrains_fun dep verbose funCMap (f:fun_def) =
       let gconst = getgconst g in 
       fun_union fconst gconst clist ;
       gconst.res
+    
+    | IfElse(e1,e2,e3) -> 
+      let tmpid = make_tmp_id () in 
+      constrains_expr venv e1 |> ignore;
+      let c2 = constrains_expr venv e2 in 
+      let c3 = constrains_expr venv e3 in 
+      isleq tmpid c2; 
+      isleq tmpid c3; 
+      tmpid
+
 
   and constrains_branch c tmpid venv b = 
     let Branch((_,xlist),e) = b in 

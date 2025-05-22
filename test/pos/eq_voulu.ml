@@ -1,5 +1,4 @@
 type nat = Z | S of nat
-type boolean = True | False 
 
 (*i,j->k avec i>j et j>i 
 3,4   4 > 3   3 2  avec 3 > 2  
@@ -12,16 +11,12 @@ and leq(a,b) = iszero(sub(b,a))
 
 
 
-and _and(b1,b2) = match b1 with 
-  | False -> False
-  | True -> (match b2 with 
-    | True -> True 
-    | False -> False)
+and _and(b1,b2) = if b1 then b2 else false
 
 (*i->j*)
 and iszero(x) = match x with
-  | Z -> True 
-  | S(x2) -> False
+  | Z -> true 
+  | S(x2) -> false
 
 (*i,j->j avec i > j
 ou i,j->k avec i>k et j>=k
