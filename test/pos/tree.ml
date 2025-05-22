@@ -100,9 +100,10 @@ let bstsearch(t,n) = match t with
 let bstinsert(t,n) = match t with 
   | Lbst -> Nbst(n,Lbst,Lbst)
   | Nbst(m,t1,t2) ->
-    match leq(n,m) with 
-      | True -> Nbst(m,bstinsert(t1,n),t2)
-      | False -> Nbst(m,t1,bstinsert(t2,n))
+    if leq(n,m) then
+      Nbst(m,bstinsert(t1,n),t2)
+    else
+      Nbst(m,t1,bstinsert(t2,n))
 
 let bstgetmax(t) = match t with 
   | Lbst -> Z (*error*)
