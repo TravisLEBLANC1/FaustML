@@ -45,9 +45,23 @@ let check_linearity (prog:prog) =
       failwith @@ "syntax error: multiple def of the fun "^f.name ;
     SSet.add f.name fset
   in
+
+  let check_type_names tset t = 
+    let (tname,clist) = t in 
+    let check_tlist tlist =  
+      List.iter (fun t' -> if not @@ SSet.mem t' tset then failwith @@ "syntax error: type "^t'^" unfound in def of "^tname) tlist 
+    in
+    List.iter (fun (_,tlist) -> check_tlist tlist) clist 
+  in
+  (* one def by type *)
   let tset = List.fold_left check_types SSet.empty prog.typedefs in 
+  (* one def by constr *)
   let cset = List.fold_left check_constr SSet.empty prog.typedefs in
+  (* one def by function *)
   let fset = List.fold_left check_fun SSet.empty prog.fundefs in 
+  (* all used type exists *)
+  List.iter (check_type_names tset) prog.typedefs;
+
   (tset,cset,fset)
 
 
