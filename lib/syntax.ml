@@ -45,14 +45,16 @@ let check_linearity (prog:prog) =
       failwith @@ "syntax error: multiple def of the fun "^f.name ;
     SSet.add f.name fset
   in
-  List.fold_left check_types SSet.empty prog.typedefs |> ignore;
-  List.fold_left check_constr SSet.empty prog.typedefs |> ignore;
-  List.fold_left check_fun SSet.empty prog.fundefs |> ignore
+  let tset = List.fold_left check_types SSet.empty prog.typedefs in 
+  let cset = List.fold_left check_constr SSet.empty prog.typedefs in
+  let fset = List.fold_left check_fun SSet.empty prog.fundefs in 
+  (tset,cset,fset)
 
 
 
 let check_syntax (prog:prog) =
-  let dep = dep_graph prog in 
+  let dep = dep_graph prog in
+  let (_,cset,fset) = check_linearity prog in  
   print_graph dep "depedency";
   (*return true if elist == vars element by element*)
   let rec match_vars vars elist = match vars,elist with 
@@ -64,12 +66,17 @@ let check_syntax (prog:prog) =
   let rec check_expr f args safe (e:expr) = match e with 
     | Var(_) -> ()
     | Let(_,e1,e2) -> check_expr f args safe e1; check_expr f args safe e2
-    | Cstr(_,elst) -> List.iter (check_expr f args safe) elst 
+    | Cstr(c,elst) -> 
+      if not @@ SSet.mem c cset then 
+        failwith @@ "syntax error: constructor "^c^" not found";
+      List.iter (check_expr f args safe) elst 
     | App(h, elst) -> 
+      if not @@ SSet.mem h fset then 
+        failwith @@ "syntax error: function "^f^" not found";
       if is_rec_call dep f h then(
         if not(match_vars (List.tl args) (List.tl elst)) || not(is_in_var safe (List.hd elst)) then 
-          let y = (concat (List.tl args) ",") in 
-          failwith @@ Printf.sprintf "the recursif call of "^f^" must have the form "^h^"(x1,"^y^") with x1 a match var of the first argument";)
+          let y = (concat  "," (List.tl args)) in 
+          failwith @@ Printf.sprintf "the recursif call of "^f^" must have the form "^h^"(x1"^y^") with x1 a match var of the first argument";)
       else 
           List.iter (check_expr f args safe) elst
     | Match(e, blst) -> 
@@ -91,7 +98,7 @@ let check_syntax (prog:prog) =
   in  
   let check_fun (f:fun_def) = check_expr f.name f.param [] f.body in 
 
-  check_linearity prog;
+  
   List.iter check_fun prog.fundefs;
 
   Printf.printf "syntaxcheck done\n"

@@ -80,10 +80,10 @@ let () =
     let lb_prog = Lexing.from_channel c_prog in
     let prog = Faust.add_default_constr @@ parse file Parser.program lb_prog in 
     close_in c_prog;
-    if !type_flag then
-      Typeinfer.type_inf_prog !verbose_flag prog;
     if !synt_flag then
       Syntax.check_syntax prog;
+    if !type_flag then
+      Typeinfer.type_inf_prog !verbose_flag prog;
     if !tier_flag then
       Tierwithdupl.tier_prog !verbose_flag prog; 
     if !type_flag && !tier_flag && !synt_flag then 
