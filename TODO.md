@@ -1,6 +1,6 @@
 [ ] check for linearity of variables in functions
 [x] check for linearity in constructor/function name
-[ ] check that type names exists 
+[x] check that type names exists 
 [ ] check for exaustivity of matches
 [ ] better error messages
 [ ] find index efficiently in interpretMS 
