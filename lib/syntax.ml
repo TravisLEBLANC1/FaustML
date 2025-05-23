@@ -1,5 +1,6 @@
 open Faust 
 open GraphF
+
 (*****
 check for syntactic restriction with the function check_syntax
 we can also create the depedency graph with dep_graph
@@ -21,6 +22,32 @@ let print_scclist lstlst =
   print_string "[";
   List.iter (fun l ->  print_list l;  ) lstlst;
   print_string "]"
+
+let check_linearity (prog:prog) = 
+  let check_types tset t = 
+    let (tname,_) = t in 
+    if SSet.mem tname tset then 
+      failwith @@ "syntax error: multiple def of the type "^tname ;
+    SSet.add tname tset
+  in 
+  let check_constr cset t = 
+    let (_,clist) = t in 
+    let check_constr_list = fun cset (c,_) -> 
+      if SSet.mem c cset then 
+        failwith @@ "syntax error: multiple def of the constr "^c ;
+      SSet.add c cset
+    in 
+    List.fold_left check_constr_list cset clist
+  in 
+
+  let check_fun fset f = 
+    if SSet.mem f.name fset then 
+      failwith @@ "syntax error: multiple def of the fun "^f.name ;
+    SSet.add f.name fset
+  in
+  List.fold_left check_types SSet.empty prog.typedefs |> ignore;
+  List.fold_left check_constr SSet.empty prog.typedefs |> ignore;
+  List.fold_left check_fun SSet.empty prog.fundefs |> ignore
 
 
 
@@ -64,9 +91,10 @@ let check_syntax (prog:prog) =
   in  
   let check_fun (f:fun_def) = check_expr f.name f.param [] f.body in 
 
+  check_linearity prog;
   List.iter check_fun prog.fundefs;
 
-  Printf.printf "syntaxcheck done\n";
+  Printf.printf "syntaxcheck done\n"
 
 
         
