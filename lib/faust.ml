@@ -37,20 +37,20 @@ let is_var x (e:expr) = match e with
   | Var(z) -> String.equal x z 
   | _ -> false
 
-let rec concat slst del = match slst with 
+let rec concat  del slst= match slst with 
   | [] -> ""
-  | s::slst -> s^del^(concat slst del) 
+  | s::slst -> del^s^(concat del slst) 
 
 let rec expr2string = function 
   | Var(x)-> x
   | Let(x,e1,e2)-> "let "^x^" = "^ expr2string e1^" in "^expr2string e2
-  | Cstr(c,elst) -> c^"("^(concat (List.map (expr2string) elst) ",")^")"
-  | App(f,elst) -> f^"("^(concat (List.map (expr2string) elst) ",")^")"
-  | Match(e, blst) -> "match "^ expr2string e ^ " with \n" ^ (concat (List.map (branch2string) blst) "\n")
+  | Cstr(c,elst) -> c^"("^(concat "," (List.map (expr2string) elst) )^")"
+  | App(f,elst) -> f^"("^(concat "," (List.map (expr2string) elst) )^")"
+  | Match(e, blst) -> "match "^ expr2string e ^ " with" ^ (concat "\n"(List.map (branch2string) blst))
   | IfElse(e1,e2,e3) -> "if "^expr2string e1 ^ " then " ^ expr2string e2 ^" else" ^ expr2string e3
 and branch2string (b:type_branch) = 
   let Branch((c,xlst),e) = b in 
-  "| "^c^"("^(concat xlst ",")^") -> "^ expr2string e
+  "| "^c^"("^(concat "," xlst )^") -> "^ expr2string e
 
 let rec value2string (v:value) = 
   let VCstr(c,vlist) = v in 

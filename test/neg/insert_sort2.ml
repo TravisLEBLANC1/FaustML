@@ -1,6 +1,10 @@
 type nat = Z | S of nat
 type natlist = Nil | Cons of nat*natlist
 
+(* this version does not pass the syntax restriction, but it does satisfy tiering
+   I would like this version to be accepted but it require some kind of parameter substitution
+*)
+
 let sort(n,l) = match n with 
   | Z -> Nil
   | S(m) -> match l with 
