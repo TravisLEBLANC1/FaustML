@@ -54,8 +54,6 @@ let testfunconst verbose fname fconst =
 
 let tier_prog (verbose:bool) (prog:prog):unit= 
   let dep = GraphF.dep_graph prog in                        (* graph of syntactic depedencies*)
-  let toporder = List.map (fun fname -> find_fun fname prog.fundefs) @@ List.concat @@ GraphF.create_scc_order dep in 
-
 
   let rec constrains_fun dep seen (f:fun_def) = 
     let fconst = create_fconst dep f in
@@ -105,7 +103,9 @@ let tier_prog (verbose:bool) (prog:prog):unit=
         let gconst = 
           if SMap.mem g seen then 
             SMap.find g seen 
-          else
+          else if GraphF.is_rec_call dep f.name g then
+            constrains_fun dep seen (Faust.find_fun g prog.fundefs) 
+          else 
             rename_graph @@ constrains_fun dep seen (Faust.find_fun g prog.fundefs) 
         in
         fun_union fconst gconst clist ;
@@ -135,7 +135,7 @@ let tier_prog (verbose:bool) (prog:prog):unit=
     fconst
   in
 
-  let fconstlist = List.map (fun f -> (f,constrains_fun dep SMap.empty f)) toporder in 
+  let fconstlist = List.map (fun f -> (f,constrains_fun dep SMap.empty f)) prog.fundefs in 
 
   if not @@ List.for_all (fun (f,fconst) -> testfunconst verbose f.name fconst) fconstlist then 
     failwith "the scc graph has a cycle-> not tierable";

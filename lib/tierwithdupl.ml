@@ -18,14 +18,19 @@ let make_id fname xname = incr cpt_id; Printf.sprintf "%s%s" fname xname
 let make_id_res fname = Printf.sprintf "%sR" fname
 
 let create_funUFmap funs dep = 
-  let create_aux (m:funCMap) (f:fun_def) =
+  let add_fconst ltgraph leqgraph m f = 
     let res = (make_id_res f.name ) in 
     let param = (List.map (fun p -> make_id f.name p) f.param) in
-    let ltgraph = GraphF.G.create () in 
-    let leqgraph = GraphF.G.create () in 
+
     if GraphF.is_rec dep f.name then 
       GraphF.G.add_edge ltgraph res (List.hd param) ;
     SMap.add f.name {res;param;ltgraph;leqgraph} m 
+  in
+  let create_aux m flist =
+    (* the same graph for all recursive functions*)
+    let ltgraph = GraphF.G.create () in 
+    let leqgraph = GraphF.G.create () in 
+    List.fold_left (add_fconst ltgraph leqgraph) m flist
   in
   List.fold_left create_aux SMap.empty funs
 
@@ -49,7 +54,6 @@ let constrains_fun dep verbose funCMap (f:fun_def) =
     fun g ->  
     let gconst = SMap.find g funCMap in 
     if GraphF.is_rec_call dep f.name g then begin
-      
       gconst 
     end
     else begin
@@ -133,9 +137,10 @@ let testfunconst verbose fname fconst =
 
 let tier_prog (verbose:bool) (prog:prog):unit= 
   let dep = GraphF.dep_graph prog in                        (* graph of syntactic depedencies*)
-  let funCMap = create_funUFmap prog.fundefs dep in (* map function to unionfind elems*)
-  
-  let toporder = List.map (fun fname -> find_fun fname prog.fundefs) @@ List.concat @@ GraphF.create_scc_order dep in 
+  let scc_order = List.map (List.map (fun fname -> find_fun fname prog.fundefs)) @@ GraphF.create_scc_order dep in 
+  let funCMap = create_funUFmap scc_order dep in (* map function to unionfind elems*)
+
+  let toporder =  List.concat scc_order in
   List.iter (constrains_fun dep verbose funCMap) toporder;
 
   if not @@ List.for_all (fun f -> testfunconst verbose f.name (SMap.find f.name funCMap)) prog.fundefs then 
