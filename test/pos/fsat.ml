@@ -1,7 +1,7 @@
 type bit = One | Zer 
 type num = Eps | Bit of bit * num
 type bitlist = Nil | Cons of bit*bitlist 
-type boolean = True | False 
+(* work in progress*)
 
 let neg(b) = match b with 
   | One -> Zer 

@@ -85,7 +85,7 @@ let () =
     if !type_flag then
       Typeinfer.type_inf_prog !verbose_flag prog;
     if !tier_flag then
-      Tierformal.tier_prog !verbose_flag prog; 
+      Tierwithdupl.tier_prog !verbose_flag prog; 
     if !type_flag && !tier_flag && !synt_flag then 
       Printf.printf "your code is certified Polytime! (using memoization and sharing)\n";
     if !eval_flag || !naive_eval_flag then (
