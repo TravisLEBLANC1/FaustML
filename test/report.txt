@@ -5,11 +5,12 @@ cube_voulu.ml: OK
 eq_quimarche.ml: OK
 eq_voulu.ml: OK
 fsat.ml: FAILED with 1 instead of 0
-insert_sort3.ml: FAILED with 1 instead of 0
+height.ml: OK
 rabbits.ml: OK
 stdlib.ml: OK
+test_diff2.ml: OK
 tree.ml: OK
-score: 7 / 9
+score: 9 / 10
 
 exp.ml: OK
 fact.ml: OK
@@ -18,6 +19,7 @@ insert_sort.ml: OK
 nbleaves.ml: OK
 power.ml: OK
 prefix.ml: OK
-score: 7 / 7
+test_diff.ml: OK
+score: 8 / 8
 
-total score: 14 / 16
+total score: 17 / 18
