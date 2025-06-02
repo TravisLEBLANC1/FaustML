@@ -10,7 +10,7 @@
 *.dot
 *.exe
 *.pdf 
-test/repport.txt
+test/report.txt
 
 # ocamlbuild working directory
 _build/
