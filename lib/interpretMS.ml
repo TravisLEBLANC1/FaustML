@@ -47,7 +47,8 @@ let eval_prog verbose prog vlist =
   let heap :heap = Array.make 2048 @@ HCstr("_EMPTY", []) in 
   let hsize = ref 0 in 
   let fundefs = prog.fundefs in 
-
+  let nb_fcall = ref 1 in 
+  let nb_mcall = ref 0 in 
   (* merge the heap with a heapval (add if needed or else read)
   keep the heap maximally shared*)
   let merge heapval = 
@@ -83,7 +84,6 @@ let eval_prog verbose prog vlist =
 
 
   let rec eval (venv:venv) (expr:expr):loc = 
-
     match expr with  
     | Var(x) -> SMap.find x venv 
     | Let(x,e1,e2) -> 
@@ -106,11 +106,13 @@ let eval_prog verbose prog vlist =
             invalid_arg @@ Printf.sprintf "wrong number of argument as input %s takes %d" f.name (List.length f.param)
         in
         let res = eval newvenv f.body in 
+        incr nb_fcall;
         Hashtbl.add cache fc res; (* add to the cache f(l1..ln)->l*)
         res
 
     | Match(e, blist) -> 
       let l = eval venv e in 
+      incr nb_mcall;
       eval_blist venv l blist 
 
     | IfElse(e1,e2,e3) -> 
@@ -146,6 +148,11 @@ let eval_prog verbose prog vlist =
     invalid_arg @@ Printf.sprintf "wrong number of argument as input %s takes %d" f.name (List.length f.param)
   in
   
-  unfold heap @@ eval venv f.body
+  let v = unfold heap @@ eval venv f.body in 
+
+  if verbose then 
+    Printf.printf "time cost fun:%d match:%d\n" !nb_fcall !nb_mcall;
+
+  v
 
 
