@@ -124,8 +124,8 @@ let tier_prog (verbose:bool) (prog:prog):unit=
     let u = equiv_expr f.name venv f.body in 
     let ures = List.hd @@ SMap.find f.name funUFmap in 
     merge_classes u ures;
-    print_string @@"--------- " ^ f.name ^ " ------\n";
-    print_classes prog.fundefs funUFmap;
+    (* print_string @@"--------- " ^ f.name ^ " ------\n";
+    print_classes prog.fundefs funUFmap; *)
   in 
   (* first we create the equivalence classes*)
   List.iter (fun f -> equiv_fun f ) prog.fundefs;

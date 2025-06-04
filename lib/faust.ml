@@ -60,7 +60,10 @@ let rec value2string (v:value) =
     c^"("^(value2string @@ List.hd vlist)^List.fold_right (fun v acc -> ","^(value2string v)^acc) (List.tl vlist) ")"
 
 let find_fun fname fundefs = 
-  List.find (fun g -> String.equal g.name fname) fundefs 
+  try 
+    List.find (fun g -> String.equal g.name fname) fundefs 
+  with 
+    Not_found -> failwith @@ "function "^fname^" not found"
 
 let find_type tname (typedefs:type_def list) = 
   List.find_opt (fun (t,_) -> String.equal t tname) typedefs 
