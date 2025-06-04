@@ -86,11 +86,11 @@ let check_syntax (prog:prog) =
       List.iter (check_expr f args safe) elst 
     | App(h, elst) -> 
       if not @@ SSet.mem h fset then 
-        failwith @@ "syntax error: function "^f^" not found";
+        failwith @@ "syntax error: function "^h^" not found in "^f;
       if is_rec_call dep f h then(
         if not(match_vars (List.tl args) (List.tl elst)) || not(is_in_var safe (List.hd elst)) then 
           let y = (concat  "," (List.tl args)) in 
-          failwith @@ Printf.sprintf "the recursif call of "^f^" must have the form "^h^"(x1"^y^") with x1 a match var of the first argument";)
+          failwith @@ Printf.sprintf "the recursif calls of "^f^" must have the form "^h^"(x1"^y^") with x1 a match var of the first argument";)
       else 
           List.iter (check_expr f args safe) elst
     | Match(e, blst) -> 
