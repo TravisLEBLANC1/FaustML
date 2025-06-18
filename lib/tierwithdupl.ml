@@ -1,8 +1,14 @@
 open Faust 
 
+
+(************
+check for tiering with the function tier_prog
+this tiering allow multiple tier for each function and downward coercion
+************)
+
 type id = string
 
-type funC = {    (* function constrains*)
+type funC = {           (* function constrains*)
   res : id;          
   param : id list; 
   ltgraph :GraphF.G.t;     (* < constraints *)
