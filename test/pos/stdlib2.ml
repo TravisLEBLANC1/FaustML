@@ -37,14 +37,17 @@ let exists(blist) = match blist with
 
 (* logical and 
    tier: i,j -> k *)
-let _and(b1,b2) = if b1 then (if b2 then true else false) else false
+let _and(b1,b2) = if b1 then b2 else false
 
 (* logical or 
    tier: i,j -> k   *)
-let _or(b1,b2) = if b1 then true else (if b2 then true else false)
+let _or(b1,b2) = if b1 then true else b2
 
 let _not(b) = if b then false else true
 
+(* you are not intended to do a match on bool
+   but if you don't want to use if-else construction
+   the syntax bellow is accepted :*)
 let ifelse(b,e1,e2) = match b with 
   | True -> e1 
   | False -> e2 
@@ -59,7 +62,11 @@ let isodd(y) = match y with
   | Z -> false 
   | S(x) -> iseven(x)
 
-let eq(a,b) = _and(leq(b,a),leq(a,b))
+let eq2(a,b) = match a with 
+  | Z -> iszero(b)
+  | S(a1) -> match b with 
+    | Z -> false 
+    | S(b1) -> eq2(a1,b1)
 
 let leq(a,b) = iszero(sub(b,a))
 
@@ -82,8 +89,8 @@ let add(x,y) = match x with
 (* y - x
   tier: i,j->j with i>j*)
 let sub(x,y) = match x with
-  | Z -> y 
-  | S(x2) -> pred(sub(x2,y)) 
+  | Z -> y
+  | S(x2) -> sub(x2,pred(y)) 
 
 
 (*tier: i,j->k with i,j > k*)
