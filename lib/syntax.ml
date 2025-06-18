@@ -8,11 +8,6 @@ we can also create the depedency graph with dep_graph
 
 
 (* return true if e is in the list of variables vars*)
-let is_in_var vars e = 
-  match e with 
-  | Var(z) -> List.mem z vars 
-  | _ -> false
-
 let print_scclist lstlst =
   let print_list lst = 
     print_string "[";
@@ -23,6 +18,8 @@ let print_scclist lstlst =
   List.iter (fun l ->  print_list l;  ) lstlst;
   print_string "]"
 
+(* check for linearity of types and fun names
+  also return thoses sets (types,constructors,funs)*)
 let check_linearity (prog:prog) = 
   let check_types tset t = 
     let (tname,_) = t in 
@@ -64,57 +61,112 @@ let check_linearity (prog:prog) =
 
   (tset,cset,fset)
 
-
-
-let check_syntax (prog:prog) =
-  let dep = dep_graph prog in
-  let (_,cset,fset) = check_linearity prog in  
-  print_graph dep "depedency";
-  (*return true if elist == vars element by element*)
-  let rec match_vars vars elist = match vars,elist with 
+(* fail if f does not satisfy syntactic restrictions*)
+let check_fun dep cset fset safe_fset (f:fun_def) =
+  (*return true if elst \in vars or p(var)  element by element*)
+  let rec match_vars safe elst = match safe,elst with 
     | [],[] -> true 
     | [],_ -> false 
     | _,[] -> false 
-    | z::vars,e::elist -> is_var z e && match_vars vars elist
+    | s::safe,e::elst -> (is_safe_call s safe_fset e) && match_vars safe elst
   in
-  let rec check_expr f args safe (e:expr) = match e with 
+
+  (* add z vars to the corresponding set of z (if it exists) *)
+  let add_to_safe safe z vars = 
+    if String.equal z (List.hd f.param) then 
+      (* add vars to the first set*)
+      (SSet.union (SSet.of_list vars) (List.hd safe))::List.tl safe
+    else
+      (* add vars to the set where z appear *)
+      let f s = if SSet.mem z s then SSet.union (SSet.of_list vars) s else s in 
+      List.map f safe 
+  in 
+
+  (*safe contains the template of possible recursive calls 
+    that is for each position, a set of possible variables *)
+  let rec check_expr safe (e:expr) = match e with 
     | Var(_) -> ()
-    | Let(_,e1,e2) -> check_expr f args safe e1; check_expr f args safe e2
+    | Let(_,e1,e2) -> check_expr safe e1; check_expr safe e2
     | Cstr(c,elst) -> 
       if not @@ SSet.mem c cset then 
         failwith @@ "syntax error: constructor "^c^" not found";
-      List.iter (check_expr f args safe) elst 
+      List.iter (check_expr safe) elst
+
     | App(h, elst) -> 
       if not @@ SSet.mem h fset then 
-        failwith @@ "syntax error: function "^h^" not found in "^f;
-      if is_rec_call dep f h then(
-        if not(match_vars (List.tl args) (List.tl elst)) || not(is_in_var safe (List.hd elst)) then 
-          let y = (concat  "," (List.tl args)) in 
-          failwith @@ Printf.sprintf "the recursif calls of "^f^" must have the form "^h^"(x1"^y^") with x1 a match var of the first argument";)
+        failwith @@ "syntax error: function "^h^" not found in "^f.name;
+      if is_rec_call dep f.name h then(
+        if not @@ match_vars safe elst then 
+          let y = (concat "," f.param) in
+          failwith @@ Printf.sprintf "the recursif calls of "^f.name^" must have the form "^h^"("^y^") with x1 a match's var of x";)
       else 
-          List.iter (check_expr f args safe) elst
+          List.iter (check_expr safe) elst
     | Match(e, blst) -> 
-      if is_var (List.hd args) e then 
-        List.iter (check_branch_safe f args safe) blst  
-      else 
-        List.iter (check_branch f args safe ) blst 
+        List.iter (check_branch safe (getvar e)) blst 
     
     | IfElse(e1,e2,e3) -> 
-      check_expr f args safe e1;
-      check_expr f args safe e2;
-      check_expr f args safe e3
+      check_expr safe e1;
+      check_expr safe e2;
+      check_expr safe e3
         
-  and check_branch f args safe (b:type_branch) = check_expr f args safe (branch_expr b)
-  and check_branch_safe f args safe (b:type_branch) = 
-    let xlst = branch_vars b in
-    let newsafe =  xlst@safe in 
-    check_expr f args newsafe (branch_expr b)
-  in  
-  let check_fun (f:fun_def) = check_expr f.name f.param [] f.body in 
+  and check_branch safe (var:string option) (b:type_branch)  = 
+    let Branch((_,xs),e) = b in 
+    if Option.is_some var then 
+      let z = Option.get var in
+      let newsafe = add_to_safe safe z xs in 
+      check_expr newsafe e 
+    else
+      check_expr safe e
+  in
 
+  let init_safe param = 
+    (*the first parameter must be stricly smaller, and the other one smaller or equal*)
+    SSet.empty :: List.map SSet.singleton (safe_tl param)
+  in
+
+  check_expr (init_safe f.param) f.body
   
-  List.iter check_fun prog.fundefs;
 
+
+
+
+(* return the set of functions that are so called "safe"
+  meaning they return a subterm of their input or an empty constructor 
+  and therefore can be used in a parameter substitution 
+  (plus they are not recursive to satisfy tiering)*)
+let safefunctions dep fundefs = 
+  let safefun = ref SSet.empty in 
+  let scc_order = List.map (List.map (fun fname -> find_fun fname fundefs)) @@ GraphF.create_scc_order dep in 
+  let toporder =  List.concat scc_order in
+
+  let rec issafeexpr = function 
+    | Var(_) -> true
+    | Let(_,e1,e2) -> issafeexpr e1 && issafeexpr e2
+    | Cstr(_,elst) -> List.is_empty elst
+    | App(h, elst) -> 
+      SSet.mem h !safefun && List.for_all issafeexpr elst
+    | Match(e, blst) -> 
+      issafeexpr e && List.for_all (fun b -> issafeexpr @@ branch_expr b ) blst
+    | IfElse(e1,e2,e3) -> issafeexpr e1 && issafeexpr e2 && issafeexpr e3
+  in
+  let issafefun (f:fun_def) = 
+    if is_rec dep f.name then ()
+    else if issafeexpr f.body then 
+      safefun := SSet.add f.name !safefun
+  in
+  List.iter issafefun toporder;
+  !safefun
+
+(* fail if one function does not satisfy syntactic restrictions*)
+let check_syntax (verbose:bool) (prog:prog) =
+  let dep = dep_graph prog in
+  let (_,cset,fset) = check_linearity prog in  
+  let safe_fset = safefunctions dep prog.fundefs in
+  if verbose then 
+    print_graph dep "depedency";
+
+  List.iter (check_fun dep cset fset safe_fset) prog.fundefs;
+  
   Printf.printf "syntaxcheck done\n"
 
 

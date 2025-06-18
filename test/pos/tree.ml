@@ -87,11 +87,11 @@ let getval(t) = match t with
 
 
 let bstsearch(t,n) = match t with 
-  | Lbst -> False 
+  | Lbst -> false 
   | Nbst(m,t1,t2) -> 
     if leq(n,m) then 
       if leq(m,n) then 
-        True 
+        true 
       else
         bstsearch(t1,n)
     else

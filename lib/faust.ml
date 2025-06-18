@@ -4,8 +4,11 @@ module SSet = Set.Make(String)
 
 (****
 contains the type of a faustml program
+and functions not specific to one file
 *****)
 
+
+(****** faustml types *********)
 type prog = {
   typedefs: type_def list; 
   fundefs: fun_def list;
@@ -28,7 +31,11 @@ and expr =
 
 type value = VCstr of string * value list (*the value C(v1,..,vn)*)
 
+(*this type is added to all programs by default*)
 let (default_booltype:type_def) = ("bool", [("True",[]); ("False", [])])
+
+
+(********* common functions ********)
 let branch_expr (b:type_branch) = let Branch((_,_),e)=b in e
 let branch_vars (b:type_branch) = let Branch((_,x),_)=b in x
 
@@ -36,6 +43,26 @@ let branch_vars (b:type_branch) = let Branch((_,x),_)=b in x
 let is_var x (e:expr) = match e with
   | Var(z) -> String.equal x z 
   | _ -> false
+
+let is_in_var vars e = 
+  match e with 
+  | Var(z) -> SSet.mem z vars 
+  | _ -> false
+
+let rec is_safe_call vars safe_fset e = match e with 
+  | Var(z) -> SSet.mem z vars  
+  | App(h,elst) -> 
+    SSet.mem h safe_fset && List.for_all (is_safe_call vars safe_fset) elst
+  | _ -> false
+
+let getvar e = match e with 
+  | Var(z) -> Option.Some(z)
+  | _ -> Option.None
+
+(* List.tl but return [] if the list is empty*)
+let safe_tl = function 
+  | [] -> []
+  | _::l -> l
 
 let rec concat  del slst= match slst with 
   | [] -> ""

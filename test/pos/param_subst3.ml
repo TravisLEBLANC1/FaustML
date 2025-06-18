@@ -3,18 +3,15 @@ type nat = Z | S of nat
 type bitlist = Zero of bitlist | One of bitlist | Nil  
 
 (* 
-parameter **subterm** substitution + tree algebra leads outside of poly time
-(satisfy typing/tiering but not syntactic restriction)
+parameter **subterm** substitution + tree algebra DOES NOT leads outside of poly time
 *)
 
 let rec create(n) = match n with 
   | Z -> L
   | S(m) -> let t = create(m) in N(t,t)
 
-(* this traverse function prevent memoization by *tryin* giving a unique id to each call AT THE SAME HEIGHT
-require l to be big enough to work
-
-this does not work because a lot of duplication still happen*)
+(* this is an attempt to create unique identifier with **subterm** substitution
+but their is still a lot of sharing possible*)
 and traverse(t,n) = match t with 
   | L -> L
   | N(t1,t2) -> 

@@ -118,8 +118,6 @@ let tier_prog (verbose:bool) (prog:prog):unit=
   in
 
   let equiv_fun (f:fun_def) =
-    
-    
     let venv = create_venv f in 
     let u = equiv_expr f.name venv f.body in 
     let ures = List.hd @@ SMap.find f.name funUFmap in 
