@@ -97,8 +97,7 @@ let check_fun dep cset fset safe_fset (f:fun_def) =
         failwith @@ "syntax error: function "^h^" not found in "^f.name;
       if is_rec_call dep f.name h then(
         if not @@ match_vars safe elst then 
-          let y = (concat "," f.param) in
-          failwith @@ Printf.sprintf "the recursif calls of "^f.name^" must have the form "^h^"("^y^") with x1 a match's var of x";)
+          failwith @@ Printf.sprintf "the recursif calls of `"^f.name^"()` must respect the syntax form (see README)")
       else 
           List.iter (check_expr safe) elst
     | Match(e, blst) -> 
