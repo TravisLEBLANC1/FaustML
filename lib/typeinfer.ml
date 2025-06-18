@@ -1,10 +1,12 @@
 open Faust 
-(*****
+
+(************
 check for typing with the function typ_inf_prog 
-******)
-type basetype = string                     (* t *)
+the typing is infered using a variant of Algorithm W but with first order
+************)
+
+type basetype = string                            (* t *)
 type funtype  = Fun of basetype list *basetype    (*t1..tn -> t*)
-                                            (*T is which types C come from, t1..tn are the types of the arguments*)
 type venv = basetype SMap.t           (* var => typ*)
 type fenv = funtype SMap.t            (* f ==> (t1..tn->t)*)
 

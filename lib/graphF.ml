@@ -1,5 +1,8 @@
 open Faust 
 
+(************
+contains graph constructions for depedency graph, tiering constrains,...
+************)
 
 module G = Graph.Imperative.Digraph.Concrete(struct
   type t = string

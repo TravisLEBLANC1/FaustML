@@ -13,14 +13,14 @@
 
 (license LICENSE)
 
-(documentation https://url/to/documentation)
 
 (package
  (name FaustML)
- (synopsis "A short synopsis")
- (description "A longer description")
+ (synopsis "First order simply typed ML, proved to be sound for polytime")
+ (description "if a program satisfy data-tiering/typing/syntax restrictions;
+ it will execute in polytime using memoization and sharing")
  (depends ocaml dune)
  (tags
-  (topics "to describe" your project)))
+  ("ICC" "Implicit Computational Complexity" "polytime" )))
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/reference/dune-project/index.html

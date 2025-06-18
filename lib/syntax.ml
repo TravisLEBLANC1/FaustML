@@ -1,10 +1,10 @@
 open Faust 
 open GraphF
 
-(*****
-check for syntactic restriction with the function check_syntax
+(************
+check for syntactic restriction with the function check_syntax 
 we can also create the depedency graph with dep_graph
-******)
+************)
 
 
 (* return true if e is in the list of variables vars*)

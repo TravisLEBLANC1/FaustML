@@ -2,10 +2,10 @@ module SMap = Map.Make(String)
 module SSet = Set.Make(String)
 
 
-(****
+(************
 contains the type of a faustml program
 and functions not specific to one file
-*****)
+************)
 
 
 (****** faustml types *********)
@@ -13,21 +13,21 @@ type prog = {
   typedefs: type_def list; 
   fundefs: fun_def list;
 }
-and type_def = string * type_constr list   (*type t = C1 of t1..tn*)
-and type_constr = string * string list     (*C(x1,..,xn)*)
-and type_branch = Branch of type_constr * expr 
-and fun_def = {                            (*f(x1,..,xn) = e*)
+and type_def = string * type_constr list       (*type t = C1 of t1..tn*)
+and type_constr = string * string list         (*C(x1,..,xn)*)
+and type_branch = Branch of type_constr * expr (*C(x1..xn) -> e*)
+and fun_def = {                                (*f(x1,..,xn) = e*)
   name: string;
   body: expr;
   param: string list; 
 }
 and expr = 
-  | Var of string                               (* x *)
-  | Let of string * expr * expr                 (* let x = e1 in e2*)
-  | Cstr of string * expr list                  (* C(e1,..,en)*)
-  | App of string * expr list                   (* f(e1,..,en)*)
-  | Match of expr * (type_branch list)   (*match e with c1->e1..cn->en*)
-  | IfElse of expr * expr * expr
+  | Var of string                            (* x *)
+  | Let of string * expr * expr              (* let x = e1 in e2*)
+  | Cstr of string * expr list               (* C(e1,..,en)*)
+  | App of string * expr list                (* f(e1,..,en)*)
+  | Match of expr * (type_branch list)       (*match e with c1->e1..cn->en*)
+  | IfElse of expr * expr * expr             (* if e1 then e2 else e3*)
 
 type value = VCstr of string * value list (*the value C(v1,..,vn)*)
 

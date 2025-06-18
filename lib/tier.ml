@@ -1,8 +1,10 @@
 open Faust 
 
-(*****
+(************
 check for tiering with the function tier_prog
-******)
+this tiering is strict, a function only have 1 tiering for the whole program
+and downward coercion not allowed
+************)
 
 module UF = UnionFind
 type ufelem = (string) UF.elem 

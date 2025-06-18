@@ -1,9 +1,10 @@
 open Faust 
 
-(*
+(************
 interpretor call by value with memoization and sharing
-the value is unfold only at the end
-*)
+the value is unfold only at the end 
+(the unfolding is for printing purposes it is not count for the polytime execution)
+************)
 
 type loc = int 
 type heapval = HCstr of string*loc list (* C(l1,..,ln)*)

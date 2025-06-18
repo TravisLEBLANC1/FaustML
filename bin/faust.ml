@@ -84,7 +84,9 @@ let () =
       Syntax.check_syntax !verbose_flag prog;
     if !type_flag then
       Typeinfer.type_inf_prog !verbose_flag prog;
-    if !tier_flag then
+    if !tier_flag then  (*choice to be made here between one of the following*)
+      (*Tier.tier_prog !verbose_flag prog; *)
+      (*Tierformal.tier_prog !verbose_flag prog; *)
       Tierwithdupl.tier_prog !verbose_flag prog; 
     if !type_flag && !tier_flag && !synt_flag then 
       Printf.printf "your code is certified Polytime! (using memoization and sharing)\n";
