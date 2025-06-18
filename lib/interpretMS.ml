@@ -148,7 +148,11 @@ let eval_prog verbose prog vlist =
     invalid_arg @@ Printf.sprintf "wrong number of argument as input %s takes %d" f.name (List.length f.param)
   in
   
-  let v = unfold heap @@ eval venv f.body in 
+  let locres = eval venv f.body in
+  if verbose then 
+    Printf.printf "the result is at location %d\n" locres;
+
+  let v = unfold heap locres in  
 
   if verbose then 
     Printf.printf "time cost fun:%d match:%d\n" !nb_fcall !nb_mcall;
