@@ -51,6 +51,7 @@ let is_in_var vars e =
 
 let rec is_safe_call vars safe_fset e = match e with 
   | Var(z) -> SSet.mem z vars  
+  | Cstr(_,elst) -> List.is_empty elst 
   | App(h,elst) -> 
     SSet.mem h safe_fset && List.for_all (is_safe_call vars safe_fset) elst
   | _ -> false
