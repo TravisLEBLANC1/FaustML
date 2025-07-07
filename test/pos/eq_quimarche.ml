@@ -1,5 +1,10 @@
 type nat = Z | S of nat
 
+(*  
+ This version of eq passes the simrec tiering 
+  But FaustML allow to automatically do this transformation:
+*)
+
 let eq(a,b) = _and(leq(b,a),leq2(idnat(a),idnat2(b)))
 
 

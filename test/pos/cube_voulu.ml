@@ -1,5 +1,10 @@
 type nat = Z | S of nat
 
+(* 
+ This version of cube does not pass the simrec tiering 
+ because it require to have a different tier of x in the same function
+*)
+
 let rec cube(x) = mul(x,mul(x,x))
 
 and add(x,y) = match x with 

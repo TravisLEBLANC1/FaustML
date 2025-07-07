@@ -1,5 +1,12 @@
 type nat = Z | S of nat
 
+
+(* 
+ This version of eq does not pass the simrec tiering 
+ because it require to have a different tier of a and b in the same function
+*)
+
+
 (*i,j->k avec i>j et j>i 
 3,4   4 > 3   3 2  avec 3 > 2  
 *)

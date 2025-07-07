@@ -1,5 +1,6 @@
 type nat = Z | S of nat
 type boollist = Nil | Cons of bool*boollist
+type natlist = E | C of nat*natlist
 type formulae = 
     Bool of bool
   | And of formulae*formulae
@@ -37,14 +38,17 @@ let exists(blist) = match blist with
 
 (* logical and 
    tier: i,j -> k *)
-let _and(b1,b2) = if b1 then (if b2 then true else false) else false
+let _and(b1,b2) = if b1 then b2 else false
 
 (* logical or 
    tier: i,j -> k   *)
-let _or(b1,b2) = if b1 then true else (if b2 then true else false)
+let _or(b1,b2) = if b1 then true else b2
 
 let _not(b) = if b then false else true
 
+(* you are not intended to do a match on bool
+   but if you don't want to use if-else construction
+   the syntax bellow is accepted :*)
 let ifelse(b,e1,e2) = match b with 
   | True -> e1 
   | False -> e2 
@@ -59,7 +63,11 @@ let isodd(y) = match y with
   | Z -> false 
   | S(x) -> iseven(x)
 
-let eq(a,b) = _and(leq(b,a),leq(a,b))
+let eq(a,b) = match a with 
+  | Z -> iszero(b)
+  | S(a1) -> match b with 
+    | Z -> false 
+    | S(b1) -> eq(a1,b1)
 
 let leq(a,b) = iszero(sub(b,a))
 
@@ -82,8 +90,8 @@ let add(x,y) = match x with
 (* y - x
   tier: i,j->j with i>j*)
 let sub(x,y) = match x with
-  | Z -> y 
-  | S(x2) -> pred(sub(x2,y)) 
+  | Z -> y
+  | S(x2) -> sub(x2,pred(y)) 
 
 
 (*tier: i,j->k with i,j > k*)
@@ -97,26 +105,42 @@ let power4(x) = mul(mul(x,x),mul(x,x))
 let power5(x) = mul(x,power4(x))
 let power6(x) = cube(square(x)) 
 
-let main(x) = iseven(x)
-
 
 (***** list operations ********)
 
 let tl(l) = match l with 
-  | Nil -> Nil 
-  | Cons(b,l') -> l' 
+  | E -> E
+  | C(b,l') -> l' 
 
 let hd(l) = match l with 
-  | Nil -> false 
-  | Cons(b,l') -> b 
+  | E -> Z (* error *) 
+  | C(b,l') -> b 
 
-let at_intern(i,l) = match i with 
-  | Z -> l
-  | S(j) -> tl(at_intern(j,l))
-
-let at(i,l) = hd(at_intern(i,l))
+let at(i,l) = match i with 
+  | Z -> hd(l) 
+  | S(j) -> at(j,tl(l))
 
 let concat(l1,l2) = match l1 with 
-  | Nil -> l2
-  | Cons(x,l1') -> Cons(x,concat(l1',l2))
+  | E -> l2
+  | C(x,l1') -> C(x,concat(l1',l2))
 
+let add2end(n,l,x) = match n with 
+  | Z -> C(x,l)
+  | S(n1) -> match l with 
+    | E -> C(x,E)
+    | C(y,l1) -> C(y,add2end(n1,l1,x))
+
+let length(l) = match l with 
+  | E -> Z 
+  | C(_,l1) -> S(length(l1))
+
+let reverse(n,l) = match n with 
+  | Z -> l 
+  | S(n1) -> match l with 
+    | E -> E (*error*)
+    | C(x,l1) -> add2end(n1,reverse(n1,l1), x)
+
+
+let main() = 
+  let l = C(Z, C(S(Z),C(S(S(Z)), C(S(S(S(Z))), E)))) in 
+  at(S(Z),l)

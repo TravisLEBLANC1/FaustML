@@ -1,5 +1,10 @@
 type nat = Z | S of nat
 
+(*  
+ This version of cube passes the simrec tiering 
+  But FaustML allow to automatically do this transformation:
+*)
+
 let cube(x) = mul(x,mul2(idnat1(x),idnat2(x)))
 
 let idnat1(n) = match n with 
