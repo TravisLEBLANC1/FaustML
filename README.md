@@ -58,8 +58,7 @@ or the small bash program will do the above line automatically:
 
 As it is still in developpement, multiple version of the tiering are accessible,
 There is a choice to be made before compilation, in the file bin/faust.ml, between:
-- `Tier.tier_prog` strict version of the tiering
-- `Tierwithdupl.tier_prog` allow duplication and downward coercion
+- `Tier.tier_prog` very strict version of the tiering
 - `Tierformal.tier_prog` allow duplication and downward coercion but also duplicate computations (instead of storing each graph)
 
 The first one follow the strict inference rules of tiering with no duplication of function.
