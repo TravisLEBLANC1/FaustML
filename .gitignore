@@ -11,6 +11,7 @@
 *.exe
 *.pdf 
 test/report.txt
+input.ml
 
 # ocamlbuild working directory
 _build/
